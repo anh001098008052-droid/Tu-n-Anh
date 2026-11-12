@@ -199,18 +199,95 @@ const WIRES=[
   {id:'grey',name:'Xám (L3)',c:'#9aa1a8',e:'#5a6067'},
   {id:'blue',name:'Xanh dương (N)',c:'#2f86de',e:'#164a86'},
   {id:'pe',name:'Vàng-xanh (PE)',c:'#36a352',e:'#1b5a2a',s:'#f2d22e'},
-  {id:'red',name:'Đỏ (DC +)',c:'#d63b30',e:'#7c1a13'},
+  {id:'red',name:'Đỏ (pha C / DC +)',c:'#d63b30',e:'#7c1a13'},
+  {id:'yel',name:'Vàng (pha A trung thế)',c:'#e0b214',e:'#7d6106'},
+  {id:'grn',name:'Xanh lá (pha B trung thế)',c:'#2f9a4a',e:'#165026'},
+  {id:'cu',name:'Đồng (thanh cái / tiếp địa)',c:'#c47a3b',e:'#6b3c14'},
   {id:'dblue',name:'Xanh đậm (DC −)',c:'#1d3f8f',e:'#0c1d47'},
   {id:'white',name:'Trắng',c:'#f2f2ee',e:'#8f8f8a'},
 ];
 const wc=id=>WIRES.find(w=>w.id===id)||WIRES[1];
-const SIZES=['0.5','0.75','1.0','1.5','2.5','4.0','6.0','10'];
+const SIZES=['0.5','0.75','1.0','1.5','2.5','4.0','6.0','10','16','25','35','50','95','150','240'];
+const thick=sz=>parseFloat(sz)>=35;
 
 const T=(id,label,x,y,d)=>({id,label,x,y,d});
 const xs=n=>Array.from({length:n},(_,i)=>18+36*i);
 
 /* ---------- Thư viện thiết bị ---------- */
 const DEFS={
+  rmu:{name:'Ngăn tủ RMU',cat:'Trung thế – RMU',prefix:'K',noTag:1,tl:'none',
+    defaults:{kind:'C',rating:'24 kV · 630 A',fuse:'25 A'},
+    props:[{k:'kind',l:'Chức năng ngăn',t:'select',o:[['C','C – Cầu dao phụ tải (lộ cáp)'],['T','T – Cầu dao + cầu chì (bảo vệ MBA)'],['V','V – Máy cắt (bảo vệ rơ le)']]},
+      {k:'rating',l:'Định mức',t:'select',o:['24 kV · 630 A','24 kV · 400 A','24 kV · 200 A','36 kV · 630 A'].map(v=>[v,v])},
+      {k:'fuse',l:'Cầu chì HRC (chỉ ngăn T)',t:'select',o:['6.3 A','10 A','16 A','20 A','25 A','31.5 A','40 A','63 A'].map(v=>[v,v])}],
+    size(){return{w:180,h:420}},
+    terms(){const L=['L1','L2','L3'],x=[30,72,114];return[...L.map((l,i)=>T('bb'+i,l,x[i],16,'up')),...L.map((l,i)=>T('c'+i,l,x[i],404,'down')),T('e','E',158,404,'down')]},
+    spec(p){return ({C:'Ngăn cầu dao phụ tải',T:'Ngăn cầu dao – cầu chì HRC '+p.fuse,V:'Ngăn máy cắt chân không'}[p.kind])+' · '+p.rating},
+    draw(p){const K={C:'CẦU DAO PHỤ TẢI',T:'BẢO VỆ MBA',V:'MÁY CẮT'}[p.kind]||'';const ln='stroke="#26313b" stroke-width="3" stroke-linecap="round" fill="none"';
+      let s=`<rect width="180" height="420" rx="4" fill="url(#gGrey)" stroke="#6f767d"/><rect width="180" height="40" rx="4" fill="#aab0b6"/><rect y="40" width="180" height="22" fill="#2f3d4c"/>`
+        +txt(90,55,(p.tag?p.tag+' · ':'')+K,{size:9,w:600,fill:'#fff',font:SANS});
+      [30,72,114].forEach((x,i)=>s+=txt(x,37,'L'+(i+1),{size:8,w:600}));
+      s+=`<rect x="12" y="70" width="156" height="196" rx="4" fill="#eef1f3" stroke="#9aa0a6"/><path d="M22 84H158" stroke="#c0392b" stroke-width="4" stroke-linecap="round"/>`;
+      if(p.kind==='V')s+=`<path d="M90 84V104M90 124V246" ${ln}/><rect x="80" y="104" width="20" height="20" fill="#eef1f3" stroke="#26313b" stroke-width="2.5"/><path d="M84 108l12 12M96 108l-12 12" stroke="#26313b" stroke-width="2"/>`;
+      else s+=`<path d="M90 84V112" ${ln}/><circle cx="90" cy="114" r="3.5" fill="none" stroke="#26313b" stroke-width="2"/><path d="M90 148L93 118" ${ln}/><path d="M90 148V${p.kind==='T'?158:246}" ${ln}/>`;
+      if(p.kind==='T')s+=`<rect x="83" y="158" width="14" height="34" rx="2" fill="#eef1f3" stroke="#26313b" stroke-width="2.5"/><path d="M90 158V192" stroke="#26313b" stroke-width="1.5"/><path d="M90 192V246" ${ln}/>`+txt(124,180,p.fuse,{size:8,w:600});
+      s+=`<path d="M90 214H110M110 214L122 202" ${ln}/><path d="M127 205v18M132 208v12M137 211v6" stroke="#26313b" stroke-width="2"/>`;
+      s+=`<circle cx="40" cy="128" r="10" fill="#2b2f34" stroke="#000"/><path d="M36 128h8M40 124v8" stroke="#9aa0a6" stroke-width="2"/><circle cx="40" cy="194" r="10" fill="#2b2f34" stroke="#000"/><path d="M36 194h8M40 190v8" stroke="#9aa0a6" stroke-width="2"/>`
+        +txt(40,150,p.kind==='V'?'CB':'LBS',{size:7.5,w:600})+txt(40,216,'ES',{size:7.5,w:600});
+      s+=`<rect x="128" y="120" width="26" height="16" rx="2" fill="#d63b30"/><path d="M141 123v10" stroke="#fff" stroke-width="2.5"/>`;
+      s+=`<rect x="20" y="230" width="72" height="28" rx="3" fill="#2b2f34"/>`+[34,56,78].map(x=>`<circle cx="${x}" cy="240" r="4" fill="#f2c230"/>`).join('')+txt(56,254,'VPIS',{size:6.5,fill:'#c9ced3'});
+      s+=`<circle cx="138" cy="244" r="12" fill="#fff" stroke="#7a8087"/><path d="M129 250a11 11 0 0 1 4-13" stroke="#36a352" stroke-width="3" fill="none"/><path d="M138 244l-6-5" stroke="#26313b" stroke-width="1.6"/>`;
+      s+=`<rect x="8" y="272" width="164" height="140" rx="4" fill="#56606a" stroke="#3a424a"/><rect x="18" y="292" width="144" height="104" rx="3" fill="#2f363d"/>`+txt(90,286,p.rating,{size:8.5,w:600,fill:'#eef2f5'});
+      [30,72,114].forEach((x,i)=>s+=`<rect x="${x-3}" y="294" width="6" height="8" fill="#9aa0a6"/><rect x="${x-10}" y="300" width="20" height="38" rx="9" fill="#1b1f23" stroke="#000"/><rect x="${x-6}" y="336" width="12" height="56" fill="#121417"/>`+txt(x+13,320,'L'+(i+1),{size:7.5,fill:'#e9edf1',anchor:'start'}));
+      return s+`<path d="M158 300V392" stroke="#c47a3b" stroke-width="3"/>`+txt(150,318,'E',{size:8,w:700,fill:'#e9edf1',anchor:'end'})}},
+
+  mvcable:{name:'Cáp ngầm trung thế',cat:'Trung thế – RMU',prefix:'WC',tl:'none',
+    defaults:{name:'Cáp đến từ lưới 22 kV',sec:'3×240'},
+    props:[{k:'name',l:'Ghi chú tuyến cáp',t:'text'},{k:'sec',l:'Tiết diện (mm²)',t:'select',o:['3×50','3×95','3×150','3×240','3×(1×240)'].map(v=>[v,v])}],
+    size(){return{w:150,h:120}},
+    terms(){return[T('l1','L1',30,16,'up'),T('l2','L2',72,16,'up'),T('l3','L3',114,16,'up'),T('e','Màn chắn',140,16,'up')]},
+    spec(p){return 'Cu/XLPE/PVC/DSTA/PVC '+p.sec+' mm² · 24 kV · đầu cáp T-plug'},
+    draw(p){return `<rect width="150" height="34" rx="4" fill="#c9ced3" stroke="#8d939a"/><path d="M30 34C30 66 62 70 64 92M72 34V92M114 34C114 66 82 70 80 92" stroke="#1a1d20" stroke-width="9" fill="none"/>
+      <path d="M140 34C140 72 94 80 86 92" stroke="#c47a3b" stroke-width="2.5" fill="none"/><rect x="54" y="88" width="36" height="20" rx="4" fill="#111"/>`
+      +txt(75,118,p.name,{size:9.5,w:600,fill:'currentColor',font:SANS})}},
+
+  fsens:{name:'Cảm biến dòng sự cố',cat:'Trung thế – RMU',prefix:'CT',noTag:1,tl:'none',
+    defaults:{},props:[],
+    size(){return{w:150,h:50}},
+    terms(){return[T('s2','S2',0,15,'left'),T('s1','S1',0,35,'left')]},
+    spec(){return 'Cảm biến vòng hở, ôm quanh cáp 3 pha'},
+    draw(){return `<rect x="4" y="6" width="146" height="38" rx="19" fill="#2b3137" opacity=".9" stroke="#11151a"/><rect x="14" y="11" width="126" height="5" rx="2.5" fill="rgba(255,255,255,.2)"/>`
+      +txt(16,19,'S2',{size:7,fill:'#e9edf1',anchor:'start'})+txt(16,39,'S1',{size:7,fill:'#e9edf1',anchor:'start'})+txt(144,30,'CT vòng',{size:7.5,w:600,fill:'#e9edf1',anchor:'end'})}},
+
+  fpi:{name:'Chỉ thị sự cố (FPI)',cat:'Trung thế – RMU',prefix:'FPI',
+    defaults:{trip:'400 A'},props:[{k:'trip',l:'Ngưỡng dòng sự cố',t:'select',o:['200 A','400 A','600 A','800 A','1000 A'].map(v=>[v,v])}],
+    size(){return{w:140,h:110}},
+    terms(){return[T('p','+',30,14,'up'),T('m','−',66,14,'up'),T('s1','S1',14,96,'down'),T('s2','S2',44,96,'down'),T('com','COM',90,96,'down'),T('no','NO',122,96,'down')]},
+    spec(p){return 'Báo ngắn mạch pha + chạm đất · ngưỡng '+p.trip+' · tiếp điểm ra SCADA'},
+    draw(p){return `<rect width="140" height="110" rx="5" fill="#e9ecef" stroke="#7a8087"/><rect width="140" height="28" rx="5" fill="#c9ced3"/><rect y="82" width="140" height="28" rx="5" fill="#c9ced3"/>
+      <circle cx="30" cy="57" r="13" fill="url(#gL-red)" stroke="#7c1a13"/><rect x="56" y="44" width="74" height="26" rx="3" fill="#c6d4a4"/>`+txt(93,61,'I> '+p.trip,{size:10,fill:'#233019'})}},
+
+  tx:{name:'Máy biến áp phân phối',cat:'Trung thế – RMU',prefix:'T',tlFill:'#1c232b',
+    defaults:{kva:'400 kVA',vg:'Dyn11'},
+    props:[{k:'kva',l:'Công suất',t:'select',o:['160 kVA','250 kVA','400 kVA','560 kVA','630 kVA','750 kVA','1000 kVA','1250 kVA'].map(v=>[v,v])},{k:'vg',l:'Tổ đấu dây',t:'select',o:['Dyn11','Yyn0'].map(v=>[v,v])}],
+    size(){return{w:260,h:260}},
+    terms(){return[T('A','A',30,16,'up'),T('B','B',72,16,'up'),T('C','C',114,16,'up'),T('E','Vỏ',236,16,'up'),T('a','a',58,244,'down'),T('b','b',94,244,'down'),T('c','c',130,244,'down'),T('n','n',166,244,'down')]},
+    spec(p){return '22/0,4 kV · '+p.kva+' · '+p.vg},
+    draw(p){let s=`<rect x="10" y="44" width="240" height="168" rx="6" fill="url(#gTank)" stroke="#4d5964"/>`;
+      for(let x=20;x<244;x+=12)s+=`<rect x="${x}" y="56" width="5" height="144" rx="2" fill="rgba(0,0,0,.13)"/>`;
+      s+=`<rect y="30" width="260" height="18" rx="3" fill="#6c7884"/><rect y="208" width="260" height="18" rx="3" fill="#6c7884"/>`;
+      [30,72,114].forEach(x=>s+=`<rect x="${x-8}" y="22" width="16" height="22" rx="3" fill="#ece6d8" stroke="#9c958a"/><path d="M${x-8} 30h16M${x-8} 37h16" stroke="#b8b0a2"/>`);
+      [58,94,130,166].forEach(x=>s+=`<rect x="${x-7}" y="214" width="14" height="20" rx="3" fill="#ece6d8" stroke="#9c958a"/>`);
+      s+=`<rect x="150" y="84" width="88" height="70" rx="3" fill="#eef1f3" stroke="#7a8087"/>`+txt(194,104,'22/0,4 kV',{size:10,w:700})+txt(194,122,p.kva,{size:9.5})+txt(194,140,p.vg,{size:9.5});
+      return s+txt(76,128,'MBA',{size:22,w:700,fill:'#fff',font:SANS})}},
+
+  ebar:{name:'Thanh tiếp địa',cat:'Trung thế – RMU',prefix:'PE',tl:'none',
+    defaults:{n:'6'},props:[{k:'n',l:'Số lỗ bắt bu lông',t:'select',o:['3','4','6','8','10'].map(v=>[v,v])}],
+    size(p){return{w:36*(+p.n||6),h:44}},
+    terms(p){return xs(+p.n||6).map((x,i)=>T('e'+i,'E'+(i+1),x,22,'down'))},
+    bridges(p){const t=this.terms(p);return t.slice(1).map(x=>[t[0].id,x.id])},
+    spec(p){return 'Thanh đồng 40×5 mm · '+p.n+' lỗ · nối hệ thống tiếp địa trạm'},
+    draw(p){const w=36*(+p.n||6);return `<rect y="8" width="${w}" height="28" rx="3" fill="url(#gCu)" stroke="#7a4317"/>`}},
   tb:{name:'Cầu đấu',cat:'Nguồn & bảo vệ',prefix:'X',tl:'none',
     defaults:{labels:'L1,L2,L3,N,PE'},
     props:[{k:'labels',l:'Tên các cực, cách nhau bằng dấu phẩy',t:'text'}],
@@ -380,8 +457,8 @@ const DEFS={
     spec(){return ''},
     draw(p){const z=+p.size||16;return this.lines(p).map((l,i)=>txt(0,z*1.05+i*z*1.35,l,{size:z,w:500,fill:'currentColor',anchor:'start',font:SANS})).join('')}},
 };
-const CATS=['Nguồn & bảo vệ','Đóng cắt','Điều khiển','Tải','Vỏ tủ & phụ kiện'];
-const LIB_ORDER=['tb','mcb','fuse','psu','km','ol','pb','lamp','relay','timer','plc','motor','rail','duct','note'];
+const CATS=['Trung thế – RMU','Nguồn & bảo vệ','Đóng cắt','Điều khiển','Tải','Vỏ tủ & phụ kiện'];
+const LIB_ORDER=['rmu','mvcable','fsens','fpi','tx','ebar','tb','mcb','fuse','psu','km','ol','pb','lamp','relay','timer','plc','motor','rail','duct','note'];
 
 /* ---------- SVG defs dùng chung ---------- */
 const lens={red:['#ff7b6e','#b8231a'],green:['#7fe896','#1e8a3b'],yellow:['#ffe680','#c99a12'],white:['#ffffff','#bfc3c8'],blue:['#80bcff','#1e5fb8']};
@@ -394,6 +471,8 @@ const SVG_DEFS=`
 <radialGradient id="gChrome" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#c5cad0"/><stop offset="1" stop-color="#8e959c"/></radialGradient>
 <radialGradient id="gMotor" cx=".38" cy=".32" r=".85"><stop offset="0" stop-color="#9fb2c3"/><stop offset="1" stop-color="#55697b"/></radialGradient>
 ${Object.entries(lens).map(([k,[a,b]])=>`<radialGradient id="gL-${k}" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></radialGradient>`).join('')}
+<linearGradient id="gTank" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d8b98"/><stop offset=".45" stop-color="#aab6c1"/><stop offset="1" stop-color="#6c7a87"/></linearGradient>
+<linearGradient id="gCu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eab07a"/><stop offset=".5" stop-color="#c47a3b"/><stop offset="1" stop-color="#94531f"/></linearGradient>
 <pattern id="pPE" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="12" fill="#f2d22e"/></pattern>`;
 const GRID_DEFS=`<pattern id="pGridMinor" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0H0V10" fill="none" stroke="var(--grid)" stroke-width="1"/></pattern>
 <pattern id="pGrid" width="50" height="50" patternUnits="userSpaceOnUse"><rect width="50" height="50" fill="url(#pGridMinor)"/><path d="M50 0H0V50" fill="none" stroke="var(--grid-major)" stroke-width="1"/></pattern>`;
@@ -448,12 +527,12 @@ function roundPath(p,r=9){let d=`M${p[0].x} ${p[0].y}`;
   for(let i=1;i<p.length-1;i++){const a=p[i-1],b=p[i],c=p[i+1];const l1=Math.hypot(b.x-a.x,b.y-a.y)||1,l2=Math.hypot(c.x-b.x,c.y-b.y)||1;const rr=Math.min(r,l1/2,l2/2);
     d+=` L${(b.x+(a.x-b.x)/l1*rr).toFixed(1)} ${(b.y+(a.y-b.y)/l1*rr).toFixed(1)} Q${b.x} ${b.y} ${(b.x+(c.x-b.x)/l2*rr).toFixed(1)} ${(b.y+(c.y-b.y)/l2*rr).toFixed(1)}`}
   const l=p[p.length-1];return d+` L${l.x} ${l.y}`}
-function wireSvg(pts,col,extra=''){const d=roundPath(pts);
-  return `<path d="${d}" fill="none" stroke="${col.e}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"${extra}/>`+
-  `<path d="${d}" fill="none" stroke="${col.c}" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>`+
-  (col.s?`<path d="${d}" fill="none" stroke="${col.s}" stroke-width="4.6" stroke-dasharray="9 9"/>`:'')+
+function wireSvg(pts,col,sz){const d=roundPath(pts),k=thick(sz)?1.7:1;
+  return `<path d="${d}" fill="none" stroke="${col.e}" stroke-width="${7*k}" stroke-linecap="round" stroke-linejoin="round"/>`+
+  `<path d="${d}" fill="none" stroke="${col.c}" stroke-width="${4.6*k}" stroke-linecap="round" stroke-linejoin="round"/>`+
+  (col.s?`<path d="${d}" fill="none" stroke="${col.s}" stroke-width="${4.6*k}" stroke-dasharray="9 9"/>`:'')+
   `<path d="${d}" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.3" transform="translate(-1 -1)"/>`}
-function ferrule(T){const v=DV[T.d];return `<path d="M${T.x+v[0]*4} ${T.y+v[1]*4}L${T.x+v[0]*14} ${T.y+v[1]*14}" stroke="#d8342a" stroke-width="8.5"/><path d="M${T.x+v[0]*4} ${T.y+v[1]*4}L${T.x+v[0]*14} ${T.y+v[1]*14}" stroke="rgba(255,255,255,.3)" stroke-width="2" transform="translate(-2 -1)"/>`}
+function ferrule(T,sz){const v=DV[T.d],big=thick(sz);return `<path d="M${T.x+v[0]*4} ${T.y+v[1]*4}L${T.x+v[0]*(big?16:14)} ${T.y+v[1]*(big?16:14)}" stroke="${big?'#b98a4e':'#d8342a'}" stroke-width="${big?13:8.5}"/><path d="M${T.x+v[0]*4} ${T.y+v[1]*4}L${T.x+v[0]*14} ${T.y+v[1]*14}" stroke="rgba(255,255,255,.3)" stroke-width="2" transform="translate(-2 -1)"/>`}
 
 /* ---------- Mạch (net) ---------- */
 function netOf(key){const adj=new Map();const link=(a,b)=>{(adj.get(a)||adj.set(a,[]).get(a)).push(b);(adj.get(b)||adj.set(b,[]).get(b)).push(a)};
@@ -478,7 +557,7 @@ function render(){
   S.wires.forEach((w,i)=>{const p=wirePts(w);if(!p)return;used.add(tkey(w.a));used.add(tkey(w.b));
     const on=sel&&sel.kind==='wire'&&sel.id===w.id;const inNet=net&&net.has(tkey(w.a));
     if(on||inNet)glow+=`<path d="${roundPath(p)}" fill="none" stroke="var(--accent)" stroke-opacity="${on?.55:.35}" stroke-width="${on?16:13}" stroke-linecap="round" stroke-linejoin="round"/>`;
-    wires+=wireSvg(p,wc(w.color))+ferrule({...p[0],d:termWorld(w.a).d})+ferrule({...p[p.length-1],d:termWorld(w.b).d});
+    wires+=wireSvg(p,wc(w.color),w.size)+ferrule({...p[0],d:termWorld(w.a).d},w.size)+ferrule({...p[p.length-1],d:termWorld(w.b).d},w.size);
     for(let j=0;j<p.length-1;j++)hits+=`<line x1="${p[j].x}" y1="${p[j].y}" x2="${p[j+1].x}" y2="${p[j+1].y}" stroke="transparent" stroke-width="14" data-seg="${w.id}:${j}"/>`;
     if(on)for(let j=1;j<p.length-2;j++){const mx=(p[j].x+p[j+1].x)/2,my=(p[j].y+p[j+1].y)/2,hz=p[j].y===p[j+1].y;
       hits+=`<rect x="${mx-(hz?9:4)}" y="${my-(hz?4:9)}" width="${hz?18:8}" height="${hz?8:18}" rx="4" fill="var(--panel)" stroke="var(--accent)" stroke-width="2" data-seg="${w.id}:${j}" style="cursor:${hz?'ns':'ew'}-resize"/>`}});
@@ -636,7 +715,7 @@ function renderSwatches(){const el=document.getElementById('swatches');el.innerH
 /* ---------- Xuất / lưu ---------- */
 function exportSvg(){const b=bbox();let body='';
   [...S.comps].sort((a,c)=>(DEFS[a.type].layer??1)-(DEFS[c.type].layer??1)).filter(c=>(DEFS[c.type].layer??1)<2).forEach(c=>body+=compSvg(c,true));
-  S.wires.forEach(w=>{const p=wirePts(w);if(p)body+=wireSvg(p,wc(w.color))+ferrule({...p[0],d:termWorld(w.a).d})+ferrule({...p[p.length-1],d:termWorld(w.b).d})});
+  S.wires.forEach(w=>{const p=wirePts(w);if(p)body+=wireSvg(p,wc(w.color),w.size)+ferrule({...p[0],d:termWorld(w.a).d},w.size)+ferrule({...p[p.length-1],d:termWorld(w.b).d},w.size)});
   S.comps.filter(c=>DEFS[c.type].layer===2).forEach(c=>body+=compSvg(c,true));
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${b.w}" height="${b.h}" viewBox="${b.x} ${b.y} ${b.w} ${b.h}" style="color:#3a434d"><defs>${SVG_DEFS}</defs><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" fill="#ffffff"/>${body}</svg>`}
 function modal(html){const root=document.getElementById('modalRoot');root.innerHTML=`<div class="modal" id="mBg"><div class="dlg" role="dialog" aria-modal="true">${html}</div></div>`;document.getElementById('mBg').addEventListener('pointerdown',e=>{if(e.target.id==='mBg')closeModal()});root.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeModal)}
@@ -659,7 +738,13 @@ document.getElementById('bData').onclick=()=>{modal(`<header><h2>Lưu / Mở b�
   document.getElementById('jLoad').onclick=()=>{try{const d=JSON.parse(document.getElementById('jsonBox').value);if(!Array.isArray(d.comps)||!Array.isArray(d.wires))throw 0;d.comps=d.comps.filter(c=>DEFS[c.type]);record();S=d;sel=null;drawing=null;changed();closeModal();fit();toast('Đã mở bản vẽ')}catch(e){toast('Dữ liệu không đúng định dạng, hãy dán lại toàn bộ đoạn đã sao chép')}}};
 document.getElementById('bNew').onclick=()=>{modal(`<header><h2>Bắt đầu trang trắng?</h2><p>Toàn bộ thiết bị và dây hiện tại sẽ bị xóa. Bạn vẫn có thể bấm Hoàn tác để lấy lại.</p></header><footer><button class="btn" data-close type="button">Giữ bản vẽ</button><button class="btn primary" id="okNew" type="button">Xóa và làm mới</button></footer>`);
   document.getElementById('okNew').onclick=()=>{record();S={comps:[],wires:[]};sel=null;drawing=null;changed();closeModal();view={x:-40,y:-40,k:1};applyView()}};
-document.getElementById('bExample').onclick=()=>{record();S=example();sel=null;drawing=null;changed();fit();toast('Đã nạp mạch mẫu: khởi động trực tiếp bằng PLC')};
+function loadExample(fn,msg){record();S=fn();sel=null;drawing=null;changed();fit();closeModal();toast(msg)}
+document.getElementById('bExample').onclick=()=>{modal(`<header><h2>Chọn mạch mẫu</h2><p>Mạch mẫu thay cho bản vẽ hiện tại. Bấm Hoàn tác nếu muốn quay lại.</p></header>
+  <div class="body"><div class="row"><button class="btn" id="exRmu" type="button" style="height:auto;padding:12px;flex-direction:column;align-items:flex-start;white-space:normal;text-align:left"><b>Tủ RMU 24 kV – 3 ngăn</b><span style="color:var(--ink-3)">2 ngăn cầu dao phụ tải + 1 ngăn bảo vệ MBA, cáp, FPI, tiếp địa</span></button>
+  <button class="btn" id="exMotor" type="button" style="height:auto;padding:12px;flex-direction:column;align-items:flex-start;white-space:normal;text-align:left"><b>Khởi động động cơ bằng PLC</b><span style="color:var(--ink-3)">Aptomat, khởi động từ, rơ le nhiệt, nút nhấn, đèn báo</span></button></div></div>
+  <footer><button class="btn" data-close type="button">Đóng</button></footer>`);
+  document.getElementById('exRmu').onclick=()=>loadExample(exampleRMU,'Đã nạp mạch mẫu tủ RMU 3 ngăn');
+  document.getElementById('exMotor').onclick=()=>loadExample(example,'Đã nạp mạch mẫu khởi động động cơ bằng PLC')};
 document.getElementById('bUndo').onclick=undo;document.getElementById('bRedo').onclick=redo;
 document.getElementById('bZi').onclick=()=>{const r=svg.getBoundingClientRect();zoomAt(view.k*1.25,r.left+r.width/2,r.top+r.height/2)};
 document.getElementById('bZo').onclick=()=>{const r=svg.getBoundingClientRect();zoomAt(view.k/1.25,r.left+r.width/2,r.top+r.height/2)};
@@ -702,9 +787,38 @@ function example(){const keep=S;S={comps:[],wires:[]};
   W(X1,'4b',M1,'pe','pe','2.5',[{x:202,y:170},{x:230,y:170},{x:230,y:870},{x:190,y:870}]);
   const out=S;S=keep;return out}
 
+/* ---------- Mạch mẫu: tủ RMU 24 kV 3 ngăn (C-C-T) ---------- */
+function exampleRMU(){const keep=S;S={comps:[],wires:[]};
+  addComp('note',200,0,{text:'TỦ RMU 24 kV – 3 NGĂN (C – C – T)\nK1: cáp đến từ lưới · K2: cáp đi RMU kế tiếp · T3: bảo vệ MBA',size:'14'});
+  const K1=addComp('rmu',200,120,{kind:'C',tag:'K1'}),K2=addComp('rmu',380,120,{kind:'C',tag:'K2'}),K3=addComp('rmu',560,120,{kind:'T',tag:'T3',fuse:'25 A'});
+  const CT1=addComp('fsens',200,570,{tag:'CT1'});
+  const C1=addComp('mvcable',200,640,{name:'Cáp đến từ lưới 22 kV',tag:'WC1'});
+  const C2=addComp('mvcable',380,640,{name:'Cáp đi RMU kế tiếp',tag:'WC2'});
+  const TR=addComp('tx',560,640,{tag:'T1'});
+  const FPI=addComp('fpi',20,300,{tag:'FPI1'});
+  const LV=addComp('tb',600,1000,{labels:'L1,L2,L3,N',tag:'Hạ thế'});
+  const EB=addComp('ebar',20,1000,{n:'6',tag:'PE1'});
+  addComp('note',20,1170,{text:'Thanh cái 3 pha nằm trong khoang SF6, nhà sản xuất đã đấu sẵn.\nPhần đấu tại hiện trường: đầu cáp T-plug, màn chắn cáp, tiếp địa, FPI và nhị thứ.',size:'14'});
+  const W=(a,at,b,bt,color,size,pts=null)=>S.wires.push({id:uid(),a:{c:a.id,t:at},b:{c:b.id,t:bt},color,size,pts});
+  [[K1,K2],[K2,K3]].forEach(([a,b])=>[0,1,2].forEach(i=>W(a,'bb'+i,b,'bb'+i,'cu','240',[{x:a.x+[30,72,114][i],y:[104,92,80][i]},{x:b.x+[30,72,114][i],y:[104,92,80][i]}])));
+  const ph=['yel','grn','red'];
+  [0,1,2].forEach(i=>{W(K1,'c'+i,C1,'l'+(i+1),ph[i],'240');W(K2,'c'+i,C2,'l'+(i+1),ph[i],'240');W(K3,'c'+i,TR,'ABC'[i],ph[i],'50')});
+  W(K1,'e',C1,'e','cu','25');W(K2,'e',C2,'e','cu','25');
+  ['a','b','c'].forEach((t,i)=>W(TR,t,LV,i+'a',['brown','black','grey'][i],'240'));W(TR,'n',LV,'3a','blue','240');
+  W(K1,'e',EB,'e0','pe','50',[{x:358,y:1080},{x:38,y:1080}]);
+  W(K2,'e',EB,'e1','pe','50',[{x:538,y:1090},{x:74,y:1090}]);
+  W(LV,'3b',EB,'e4','pe','95',[{x:726,y:1120},{x:182,y:1120}]);
+  W(K3,'e',EB,'e2','pe','50',[{x:718,y:580},{x:880,y:580},{x:880,y:1140},{x:110,y:1140}]);
+  W(TR,'E',EB,'e3','pe','50',[{x:796,y:610},{x:895,y:610},{x:895,y:1150},{x:146,y:1150}]);
+  W(CT1,'s2',FPI,'s2','black','1.5');W(CT1,'s1',FPI,'s1','dblue','1.5',[{x:165,y:605},{x:165,y:424},{x:34,y:424}]);
+  const out=S;S=keep;return out}
+
 /* ---------- Khởi động ---------- */
 let loaded=null;try{loaded=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
-S=(loaded&&Array.isArray(loaded.comps)&&loaded.comps.length)?{comps:loaded.comps.filter(c=>DEFS[c.type]),wires:loaded.wires||[]}:example();
+let seenRmu=false;try{seenRmu=!!localStorage.getItem(KEY+'-rmu')}catch(e){}
+S=(loaded&&Array.isArray(loaded.comps)&&loaded.comps.length)?{comps:loaded.comps.filter(c=>DEFS[c.type]),wires:loaded.wires||[]}:exampleRMU();
+if(loaded&&!seenRmu){hist.push(JSON.stringify(S));S=exampleRMU();setTimeout(()=>toast('Đã mở mạch mẫu tủ RMU · bấm Hoàn tác để về bản vẽ cũ'),600)}
+try{localStorage.setItem(KEY+'-rmu','1')}catch(e){}
 cleanup();renderLib();renderSwatches();renderPanel();render();requestAnimationFrame(()=>{applyView();fit()});
 })();
 </script>

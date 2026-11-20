@@ -200,6 +200,13 @@ canvas{display:block;width:100%}
 .legend span{display:inline-flex;align-items:center;gap:5px}
 #scope{height:150px;border-radius:8px;background:var(--plot);border:1px solid var(--line)}
 #trend{height:130px;border-radius:8px;background:var(--plot);border:1px solid var(--line)}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--ink-2)}
+.steps b{color:var(--ink)}
+.cmd{margin:0;font-family:var(--font-mono);font-size:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:9px 12px;overflow-x:auto;white-space:pre}
+.io{padding-block:8px;border-block:1px dashed var(--line);display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 12px}
+.io .bi{font-size:11.5px}
+.io .bi.on i{background:var(--ok);border-color:var(--ok);box-shadow:0 0 6px var(--ok)}
+.ro .v.ok{color:var(--ok)} .ro .v.bad{color:var(--bad)}
 .copyfall{width:100%;height:120px;font-family:var(--font-mono);font-size:11px;border:1px solid var(--line);border-radius:6px;background:var(--panel-2);color:var(--ink)}
 </style>
 
@@ -260,6 +267,7 @@ canvas{display:block;width:100%}
         <button class="tab" role="tab" id="tab-man" aria-selected="true" aria-controls="pn-man">Bơm thủ công</button>
         <button class="tab" role="tab" id="tab-ramp" aria-selected="false" aria-controls="pn-ramp">Dò ngưỡng<small>khởi động / trở về</small></button>
         <button class="tab" role="tab" id="tab-tm" aria-selected="false" aria-controls="pn-tm">Đặc tính thời gian</button>
+        <button class="tab" role="tab" id="tab-plc" aria-selected="false" aria-controls="pn-plc">Thiết bị thật<small id="plcTabTag">PLC</small></button>
       </div>
 
       <!-- Manual -->
@@ -341,6 +349,44 @@ canvas{display:block;width:100%}
           <span><i class="sw" style="background:var(--pn)"></i>Đặc tính đất</span>
           <span><i class="sw" style="background:var(--ok);border-radius:50%"></i>Đạt</span>
           <span><i class="sw" style="background:var(--bad);border-radius:50%"></i>Không đạt</span>
+        </div>
+      </div>
+
+      <!-- Real hardware via PLC bridge -->
+      <div class="card-b" id="pn-plc" role="tabpanel" hidden>
+        <div id="plcOff">
+          <p class="hint" style="color:var(--ink-2)">Đo thời gian cắt của <b>rơ le thật</b>. PLC Xinje XD3 đóng contactor bơm dòng, đếm thời gian từ lúc có dòng (X3) đến khi tiếp điểm cắt (X1) đóng, rồi gửi kết quả về đây để so với chỉnh định.</p>
+          <div class="warnbox">Chưa thấy cầu nối PLC. Trình duyệt không được phép mở cổng COM, nên trang phải được mở qua chương trình cầu nối chạy trên máy tính của bạn.</div>
+          <ol class="steps">
+            <li>Nạp chương trình mẫu trong <b>plc-do-thoi-gian/chuong-trinh-plc.md</b> vào PLC bằng XDPPro.</li>
+            <li>Cài Python 3, rồi chạy lệnh dưới đây trong thư mục <b>plc-do-thoi-gian</b> (đổi COM3 thành cổng của bộ chuyển USB–RS485).</li>
+            <li>Mở địa chỉ <b>http://localhost:8765/bom-dong-thu-role.html</b> mà cầu nối in ra. Tab này sẽ tự chuyển sang chế độ đo.</li>
+          </ol>
+          <pre class="cmd">pip install pyserial
+python cau_noi_plc.py --port COM3
+python cau_noi_plc.py --demo        # chạy thử khi chưa có PLC</pre>
+          <p class="hint">Đấu dây, cài cổng Modbus và giảm bộ lọc đầu vào: xem plc-do-thoi-gian/README.md.</p>
+        </div>
+        <div id="plcOn" hidden>
+          <div class="readouts">
+            <div class="ro"><div class="k">Kết nối</div><div class="v" id="plcConn">—</div><div class="s" id="plcInfo"></div></div>
+            <div class="ro"><div class="k">Trạng thái PLC</div><div class="v" id="plcState">—</div><div class="s" id="plcStateS"></div></div>
+            <div class="ro"><div class="k">Lần đo gần nhất</div><div class="v" id="plcLast">—</div><div class="s" id="plcLastS"></div></div>
+          </div>
+          <div class="io" id="plcIO"></div>
+          <div class="grid2">
+            <label class="fld"><span>Kiểu sự cố đang bơm</span><select id="plc-fault"></select></label>
+            <label class="fld"><span>Dòng bơm thực tế (A thứ cấp, đọc ampe kế)</span><input type="number" id="plc-I" step="0.01" min="0"></label>
+            <label class="fld"><span>Ghi chú (ví dụ: ngăn lộ, số rơ le)</span><input type="text" id="plc-note" maxlength="60"></label>
+          </div>
+          <div class="readouts">
+            <div class="ro"><div class="k">Kỳ vọng theo chỉnh định</div><div class="v" id="plcExp">—</div><div class="s" id="plcExpS"></div></div>
+          </div>
+          <div class="toolbar">
+            <button class="btn primary big" id="plcGo">▶ Bắt đầu đo</button>
+            <button class="btn big" id="plcStop">■ Dừng</button>
+            <p class="hint" style="flex:1;min-width:200px">Có thể bấm nút X0 tại bàn thử thay cho nút này. Mỗi kết quả PLC gửi về được ghi vào biên bản theo dòng và kiểu sự cố đang nhập ở trên.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -677,10 +723,10 @@ function rampWarn(){
 }
 
 /* ================= Mô-đun: Đặc tính thời gian ================= */
-function faultPh(p){
-  const I = p.mult * S.el[p.ref].is;
+function faultPh(p){ return faultPhI(p.fault, p.mult * S.el[p.ref].is); }
+function faultPhI(fault, I){
   const z = [{m:0,a:0},{m:0,a:-120},{m:0,a:120}];
-  switch(p.fault){
+  switch(fault){
     case '3P': z.forEach(q=>q.m=I); break;
     case 'AE': z[0].m=I; break; case 'BE': z[1].m=I; break; case 'CE': z[2].m=I; break;
     case 'AB': z[0]={m:I,a:0}; z[1]={m:I,a:180}; break;
@@ -723,6 +769,80 @@ function tmStart(){
   TM.pts.forEach(p=>p.res=null);
   TM.run = {i:0, phase:'pre', t0:T.t}; T.mod = tmMod;
   log('Bắt đầu chuỗi thử đặc tính, '+TM.pts.length+' điểm','sys'); renderPts(); drawTcc(); syncButtons();
+}
+
+
+/* ================= Mô-đun: Thiết bị thật qua PLC ================= */
+const PLC = {avail:false, st:null, base:null, fault:'3P', I:2, note:'', last:null, timer:null};
+const PLC_STATE = {0:['Chờ','Sẵn sàng đo'],1:['Đang bơm','Đang đếm thời gian'],2:['Đã cắt','Rơ le đã cắt'],3:['Quá thời gian','Rơ le không cắt']};
+const PLC_IO = [['x',0,'X0 Nút bắt đầu'],['x',1,'X1 Tiếp điểm cắt'],['x',2,'X2 Tiếp điểm khởi động'],['x',3,'X3 Có dòng'],['x',4,'X4 Nút dừng'],['y',0,'Y0 Contactor bơm'],['y',1,'Y1 Đèn đang thử']];
+async function plcPoll(){
+  try{
+    const r = await fetch('api/status', {cache:'no-store'});
+    if(!r.ok) throw new Error('no bridge');
+    const j = await r.json();
+    if(j.bridge !== 'bomdong') throw new Error('no bridge');
+    if(!PLC.avail){ PLC.avail = true; log('Đã kết nối cầu nối PLC ('+j.info+')','sys'); }
+    PLC.st = j;
+    if(j.connected){
+      if(PLC.base === null) PLC.base = j.count;
+      else if(j.count !== PLC.base){ PLC.base = j.count; plcRecord(j); }
+    }
+  }catch(e){
+    if(PLC.avail) log('Mất kết nối cầu nối PLC','trip');
+    PLC.avail = false; PLC.st = null;
+  }
+  renderPlc();
+  clearTimeout(PLC.timer);
+  PLC.timer = setTimeout(plcPoll, PLC.avail ? 200 : 4000);
+}
+function plcExpected(){ return expected(faultPhI(PLC.fault, PLC.I)); }
+function plcRecord(j){
+  const ex = plcExpected();
+  const mea = j.state===2 ? j.last_ms/1000 : null;
+  const ok = timeOK(ex.t, mea);
+  PLC.last = {mea, ok};
+  addRes({mod:'Đo thực tế (PLC)', cond:FAULTS[PLC.fault]+(PLC.note?' · '+PLC.note:''), inj:fA(PLC.I)+' ('+fP(PLC.I)+')',
+    exp:fT(ex.t)+(ex.id?' ['+ELM[ex.id].lbl+']':''), mea:fT(mea==null?Infinity:mea), dev:devStr(ex.t,mea), ok});
+  log('PLC: '+(mea==null?'quá thời gian chờ, rơ le không cắt':'rơ le cắt sau '+mea.toFixed(3)+' s')+' · '+(ok?'đạt':'không đạt'), ok?'ok':'trip');
+}
+async function plcCmd(path, body){
+  try{
+    const r = await fetch('api/'+path, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body||{})});
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error||'lỗi');
+  }catch(e){ log('Không gửi được lệnh tới PLC: '+e.message,'trip'); }
+}
+function renderPlc(){
+  $('#plcOff').hidden = PLC.avail; $('#plcOn').hidden = !PLC.avail;
+  $('#plcTabTag').textContent = PLC.avail ? (PLC.st && PLC.st.mode==='demo' ? 'giả lập' : 'đã nối') : 'PLC';
+  if(!PLC.avail) return;
+  const j = PLC.st;
+  $('#plcConn').textContent = j.connected ? 'Đã kết nối' : 'Mất tín hiệu';
+  $('#plcConn').className = 'v ' + (j.connected ? 'ok' : 'bad');
+  $('#plcInfo').textContent = j.connected ? j.info : j.error;
+  const st = PLC_STATE[j.state] || ['?','Mã trạng thái '+j.state];
+  $('#plcState').textContent = st[0]; $('#plcStateS').textContent = st[1];
+  $('#plcLast').textContent = PLC.last ? fT(PLC.last.mea==null?Infinity:PLC.last.mea) : '—';
+  $('#plcLast').className = 'v ' + (PLC.last ? (PLC.last.ok?'ok':'bad') : '');
+  $('#plcLastS').textContent = PLC.last ? (PLC.last.ok?'Đạt':'Không đạt') : 'Chưa có kết quả trong phiên này';
+  $('#plcIO').innerHTML = PLC_IO.map(([k,i,n])=>`<span class="bi ${j[k]&&j[k][i]?'on':''}"><i></i>${n}</span>`).join('');
+  $('#plcGo').disabled = !j.connected || j.state===1;
+  $('#plcStop').disabled = !j.connected;
+}
+function renderPlcExp(){
+  const ex = plcExpected();
+  $('#plcExp').textContent = fT(ex.t);
+  $('#plcExpS').textContent = ex.id ? 'Phần tử '+ELM[ex.id].lbl+' ('+ELM[ex.id].ansi+') · dung sai ±'+Math.max(isFinite(ex.t)?ex.t*S.tolT/100:0, S.tolTms/1000).toFixed(3)+' s' : 'Với dòng này, không phần tử nào tác động';
+}
+function bindPlc(){
+  $('#plc-fault').innerHTML = Object.entries(FAULTS).map(([v,n])=>`<option value="${v}">${n}</option>`).join('');
+  $('#plc-fault').value = PLC.fault; $('#plc-I').value = PLC.I;
+  const rd = ()=>{ PLC.fault=$('#plc-fault').value; PLC.I=Math.max(0,num('#plc-I',PLC.I)); PLC.note=$('#plc-note').value.trim(); renderPlcExp(); };
+  ['#plc-fault','#plc-I','#plc-note'].forEach(id=>{ $(id).addEventListener('input',rd); $(id).addEventListener('change',rd); });
+  $('#plcGo').addEventListener('click', ()=>{ plcCmd('start', {timeout_ms: Math.min(30000, S.maxT*1000)}); log('Gửi lệnh bắt đầu đo tới PLC','sys'); });
+  $('#plcStop').addEventListener('click', ()=>{ plcCmd('stop'); log('Gửi lệnh dừng tới PLC','sys'); });
+  renderPlcExp(); renderPlc(); plcPoll();
 }
 
 /* ================= Biên bản / nhật ký ================= */
@@ -791,6 +911,7 @@ function derived(){
   const faulty = F.pe||F.te||F.swap||F.noTrip;
   $('#simBox').querySelector('summary').textContent = 'Giả lập lỗi rơ le (luyện tập)'+(faulty?' · ĐANG BẬT':'');
   renderManRows(false); renderPts(); rampWarn(); drawTcc();
+  if($('#plcExp')) renderPlcExp();
 }
 
 /* ================= UI: Thủ công ================= */
@@ -1043,12 +1164,12 @@ function frame(now){
 /* ================= Sự kiện ================= */
 function bind(){
   // tabs
-  const tabs=[['#tab-man','#pn-man'],['#tab-ramp','#pn-ramp'],['#tab-tm','#pn-tm']];
+  const tabs=[['#tab-man','#pn-man'],['#tab-ramp','#pn-ramp'],['#tab-tm','#pn-tm'],['#tab-plc','#pn-plc']];
   tabs.forEach(([t,p])=>$(t).addEventListener('click',()=>{ tabs.forEach(([t2,p2])=>{ $(t2).setAttribute('aria-selected', t2===t); $(p2).hidden = p2!==p; }); if(p==='#pn-tm') drawTcc(); try{localStorage.setItem('bomdong.tab',t)}catch(e){} }));
   try{ const t=localStorage.getItem('bomdong.tab'); if(t && $(t)) $(t).click(); }catch(e){}
   $('#speed').addEventListener('change', e=>{ speed=+e.target.value; log('Tốc độ mô phỏng ×'+speed,'sys'); });
-  $('#estop').addEventListener('click', ()=>{ stopAll('dừng khẩn'); log('DỪNG KHẨN','trip'); });
-  document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ stopAll('dừng khẩn'); } });
+  $('#estop').addEventListener('click', ()=>{ stopAll('dừng khẩn'); log('DỪNG KHẨN','trip'); if(PLC.avail) plcCmd('stop'); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ stopAll('dừng khẩn'); if(PLC.avail) plcCmd('stop'); } });
   // manual
   $('#manRows').addEventListener('input', readMan); $('#manRows').addEventListener('change', readMan);
   $('#manStep').value = MAN.step; $('#manStep').addEventListener('input', readMan);
@@ -1086,7 +1207,7 @@ function bind(){
 }
 
 /* ================= Khởi động ================= */
-readTokens(); buildSettings(); renderManRows(true); writeRampInputs(); rampAuto(); buildPhasor(); bind();
+readTokens(); buildSettings(); renderManRows(true); writeRampInputs(); rampAuto(); buildPhasor(); bind(); bindPlc();
 renderRes(); renderRamp(); renderPts(); syncButtons();
 log('Hợp bộ sẵn sàng. Rơ le ảo cấp nguồn, đấu K1→BI1, K2→BI2.','sys');
 requestAnimationFrame(t=>{ lastF=t; drawTcc(); requestAnimationFrame(frame); });

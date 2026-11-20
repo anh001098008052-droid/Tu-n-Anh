@@ -1,0 +1,1094 @@
+<title>Bàn bơm dòng rơ le</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* Layout: thanh điều khiển nguồn bơm (dính trên cùng) · cột trái: chỉnh định rơ le · giữa: mô-đun thử + kết quả · phải: mặt rơ le ảo + véc tơ + dạng sóng */
+:root{
+  --bg:#e9edf1; --panel:#ffffff; --panel-2:#f3f5f8; --line:#d5dce4;
+  --ink:#1b222a; --ink-2:#55616e; --ink-3:#8692a0;
+  --accent:#d9611c; --accent-ink:#ffffff; --accent-soft:rgba(217,97,28,.12);
+  --ok:#1f8a4c; --ok-soft:rgba(31,138,76,.12); --bad:#c8352a; --bad-soft:rgba(200,53,42,.12); --warn:#b7791f; --warn-soft:rgba(183,121,31,.14);
+  --pa:#c99700; --pb:#23914a; --pc:#d0392d; --pn:#2f6bd0;
+  --device:#2a323b; --device-2:#353f4a; --device-ink:#dfe6ec; --device-ink-2:#93a1ae;
+  --lcd-bg:#a9c27a; --lcd-ink:#1d2a0e; --lcd-dim:#7f9a52;
+  --plot:#fbfcfd; --grid:#e6eaef; --grid-major:#cdd5de;
+  --font-ui:'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11151a; --panel:#1a2027; --panel-2:#212831; --line:#2e3742;
+    --ink:#e5eaef; --ink-2:#a3aebb; --ink-3:#6f7b89;
+    --accent:#f0884a; --accent-ink:#1a1006; --accent-soft:rgba(240,136,74,.16);
+    --ok:#4cc477; --ok-soft:rgba(76,196,119,.15); --bad:#f06a5e; --bad-soft:rgba(240,106,94,.15); --warn:#e5a94a; --warn-soft:rgba(229,169,74,.15);
+    --pa:#f2c230; --pb:#4cc471; --pc:#f0675b; --pn:#6aa0ff;
+    --device:#0d1115; --device-2:#1b2229; --device-ink:#dfe6ec; --device-ink-2:#7f8d9a;
+    --lcd-bg:#1d2a12; --lcd-ink:#b7e07a; --lcd-dim:#4b6430;
+    --plot:#161b21; --grid:#1f262e; --grid-major:#2b343e;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11151a; --panel:#1a2027; --panel-2:#212831; --line:#2e3742;
+  --ink:#e5eaef; --ink-2:#a3aebb; --ink-3:#6f7b89;
+  --accent:#f0884a; --accent-ink:#1a1006; --accent-soft:rgba(240,136,74,.16);
+  --ok:#4cc477; --ok-soft:rgba(76,196,119,.15); --bad:#f06a5e; --bad-soft:rgba(240,106,94,.15); --warn:#e5a94a; --warn-soft:rgba(229,169,74,.15);
+  --pa:#f2c230; --pb:#4cc471; --pc:#f0675b; --pn:#6aa0ff;
+  --device:#0d1115; --device-2:#1b2229; --device-ink:#dfe6ec; --device-ink-2:#7f8d9a;
+  --lcd-bg:#1d2a12; --lcd-ink:#b7e07a; --lcd-dim:#4b6430;
+  --plot:#161b21; --grid:#1f262e; --grid-major:#2b343e;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:13px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+.mono,.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--panel)}
+
+/* ---------- Header ---------- */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line);
+  padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.brand{display:flex;flex-direction:column;line-height:1.15;margin-right:auto;min-width:0}
+.brand b{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.brand span{font-size:11px;color:var(--ink-3)}
+.hgroup{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-weight:600;font-size:12px;white-space:nowrap}
+.pill .dot{width:9px;height:9px;border-radius:50%;background:var(--ink-3)}
+.pill.on{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.pill.on .dot{background:var(--bad);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.pill.on .dot{animation:none}}
+.clock{font-family:var(--font-mono);font-size:12px;color:var(--ink-2);white-space:nowrap}
+.bi{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2);white-space:nowrap}
+.bi i{width:10px;height:10px;border-radius:50%;border:1px solid var(--line);background:var(--panel-2)}
+.bi.st i{background:var(--warn);border-color:var(--warn);box-shadow:0 0 6px var(--warn)}
+.bi.tr i{background:var(--bad);border-color:var(--bad);box-shadow:0 0 6px var(--bad)}
+label.inline{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2)}
+select,input[type=number],input[type=text]{height:30px;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:0 8px;min-width:0}
+input[type=number]{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:7px;border:1px solid var(--line);background:var(--panel);cursor:pointer;white-space:nowrap;font-weight:500}
+.btn:hover{background:var(--panel-2)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:700;letter-spacing:.02em}
+.btn.sm{height:26px;padding:0 8px;font-size:12px}
+.btn.big{height:40px;padding:0 18px;font-size:14px}
+
+/* ---------- Grid ---------- */
+main{display:grid;grid-template-columns:310px minmax(0,1fr) 360px;gap:14px;align-items:start;
+  padding-block:14px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+@media (max-width:1180px){main{grid-template-columns:280px minmax(0,1fr)} .col-right{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}}
+@media (max-width:760px){main{grid-template-columns:minmax(0,1fr)} .col-right{grid-template-columns:minmax(0,1fr)}}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;min-width:0}
+.card-h{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.card-h h2{font-size:13px;font-weight:700;margin:0;letter-spacing:-.005em}
+.card-h .sub{font-size:11px;color:var(--ink-3);margin-left:auto;text-align:right}
+.card-b{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.hint{font-size:11.5px;color:var(--ink-3);margin:0}
+.warnbox{font-size:12px;border:1px solid var(--warn);background:var(--warn-soft);color:var(--ink);border-radius:7px;padding:8px 10px}
+
+/* ---------- Settings ---------- */
+.frow{display:grid;grid-template-columns:1fr 128px;align-items:center;gap:8px}
+.frow > span{font-size:12px;color:var(--ink-2)}
+.frow input,.frow select{width:100%}
+.frow.three{grid-template-columns:1fr 70px 70px}
+.el{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--panel-2)}
+.el.off{opacity:.55}
+.el-h{display:flex;align-items:center;gap:8px}
+.el-h b{font-family:var(--font-mono);font-size:13px}
+.el-h .ansi{font-size:10.5px;font-weight:600;color:var(--ink-3);border:1px solid var(--line);border-radius:4px;padding:0 4px;background:var(--panel)}
+.el-h .nm{font-size:11.5px;color:var(--ink-2);flex:1;min-width:0}
+.derived{font-size:11px;color:var(--ink-3);font-family:var(--font-mono);text-align:right}
+.switch{position:relative;width:32px;height:18px;flex:none}
+.switch input{opacity:0;position:absolute;inset:0;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:background .15s}
+.switch span::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--panel);transition:transform .15s}
+.switch input:checked + span{background:var(--accent)}
+.switch input:checked + span::after{transform:translateX(14px)}
+.switch input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+details.sim{border:1px dashed var(--warn);border-radius:8px;background:var(--warn-soft)}
+details.sim summary{cursor:pointer;padding:9px 10px;font-weight:600;font-size:12px;list-style:none;display:flex;align-items:center;gap:6px}
+details.sim summary::-webkit-details-marker{display:none}
+details.sim summary::before{content:"▸";transition:transform .15s}
+details.sim[open] summary::before{transform:rotate(90deg)}
+details.sim .inner{padding:0 10px 10px;display:flex;flex-direction:column;gap:8px}
+.chk{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-2)}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex;gap:2px;padding:6px 6px 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tab{border:0;background:none;padding:9px 14px;border-radius:7px 7px 0 0;cursor:pointer;font-weight:600;color:var(--ink-2);white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);background:var(--panel-2)}
+.tab small{font-weight:500;color:var(--ink-3);margin-left:4px}
+
+/* Manual */
+.chtable{width:100%;border-collapse:collapse}
+.chtable th{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:4px 6px}
+.chtable td{padding:4px 6px}
+.chtable input[type=number]{width:100%}
+.chname{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-weight:700}
+.sw{width:12px;height:12px;border-radius:3px;flex:none}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.ro{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--panel-2);min-width:0}
+.ro .k{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.ro .v{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:18px;font-weight:700;margin-top:2px}
+.ro .s{font-size:11px;color:var(--ink-3)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 14px}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld > span{font-size:11.5px;color:var(--ink-2)}
+.fld input,.fld select{width:100%}
+
+/* Points table / results */
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table.data{width:100%;border-collapse:collapse;font-size:12px}
+table.data th{position:sticky;top:0;background:var(--panel-2);font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.data td{padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
+table.data tr:last-child td{border-bottom:0}
+table.data td.num{text-align:right}
+table.data tr.cur td{background:var(--accent-soft)}
+table.data select,table.data input{height:26px}
+table.data input[type=number]{width:72px}
+.tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.03em}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.na{background:var(--panel-2);color:var(--ink-3);border:1px solid var(--line)}
+.empty{padding:22px 14px;text-align:center;color:var(--ink-3);font-size:12.5px}
+.summary{display:flex;gap:8px;flex-wrap:wrap}
+canvas{display:block;width:100%}
+#tcc{height:300px;border:1px solid var(--line);border-radius:8px;background:var(--plot)}
+
+/* Log */
+.log{max-height:190px;overflow:auto;font-family:var(--font-mono);font-size:11.5px;display:flex;flex-direction:column}
+.log div{display:grid;grid-template-columns:78px 1fr;gap:8px;padding:3px 14px;border-bottom:1px dashed var(--line)}
+.log div span:first-child{color:var(--ink-3);text-align:right}
+.log .k-trip{color:var(--bad)} .log .k-start{color:var(--warn)} .log .k-ok{color:var(--ok)} .log .k-sys{color:var(--accent)}
+
+/* ---------- Relay faceplate ---------- */
+.relay{background:var(--device);color:var(--device-ink);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px;border:1px solid var(--device-2);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.relay-top{display:flex;align-items:baseline;gap:8px}
+.relay-top b{font-size:13px;letter-spacing:.04em}
+.relay-top span{font-size:10.5px;color:var(--device-ink-2);margin-left:auto;font-family:var(--font-mono)}
+.lcd{background:var(--lcd-bg);color:var(--lcd-ink);border-radius:6px;padding:10px 12px;font-family:var(--font-mono);font-size:12.5px;line-height:1.55;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.35);min-height:132px;white-space:pre;overflow:hidden}
+.lcd .dim{color:var(--lcd-dim)}
+.leds{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 6px}
+.led{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--device-ink-2);white-space:nowrap}
+.led i{width:11px;height:11px;border-radius:50%;background:var(--device-2);border:1px solid rgba(255,255,255,.08);flex:none}
+.led.g.on i{background:#3ddc6b;box-shadow:0 0 8px #3ddc6b}
+.led.y.on i{background:#ffc23a;box-shadow:0 0 8px #ffc23a}
+.led.r.on i{background:#ff4a3a;box-shadow:0 0 9px #ff4a3a}
+.led.on{color:var(--device-ink)}
+.relay-btns{display:flex;gap:8px;flex-wrap:wrap}
+.dbtn{height:28px;padding:0 10px;border-radius:6px;border:1px solid var(--device-2);background:var(--device-2);color:var(--device-ink);cursor:pointer;font-size:12px}
+.dbtn:hover{filter:brightness(1.2)}
+.terms{display:flex;gap:6px;flex-wrap:wrap;font-family:var(--font-mono);font-size:10.5px;color:var(--device-ink-2)}
+.terms span{border:1px solid var(--device-2);border-radius:4px;padding:1px 6px}
+.terms span.on{color:var(--device-ink);border-color:var(--device-ink-2)}
+
+#phasor{width:100%;max-width:320px;aspect-ratio:1;margin:0 auto;display:block}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-2);font-family:var(--font-mono)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+#scope{height:150px;border-radius:8px;background:var(--plot);border:1px solid var(--line)}
+#trend{height:130px;border-radius:8px;background:var(--plot);border:1px solid var(--line)}
+.copyfall{width:100%;height:120px;font-family:var(--font-mono);font-size:11px;border:1px solid var(--line);border-radius:6px;background:var(--panel-2);color:var(--ink)}
+</style>
+
+<header>
+  <div class="brand"><b>Bàn bơm dòng rơ le</b><span>Giả lập hợp bộ thử nhị thứ · rơ le quá dòng 50/51 · 50N/51N</span></div>
+  <div class="hgroup">
+    <span class="pill" id="outPill"><span class="dot"></span><span id="outTxt">Nguồn bơm: TẮT</span></span>
+    <span class="clock" id="clock" title="Thời gian mô phỏng">t = 0.000 s</span>
+    <span class="bi" id="biStart" title="Đầu vào nhị phân BI2 nối tiếp điểm khởi động"><i></i>BI2 Khởi động</span>
+    <span class="bi" id="biTrip" title="Đầu vào nhị phân BI1 nối tiếp điểm cắt"><i></i>BI1 Cắt</span>
+  </div>
+  <div class="hgroup">
+    <label class="inline" for="speed">Tốc độ
+      <select id="speed"><option value="1">×1 thực</option><option value="2">×2</option><option value="5">×5</option><option value="10">×10</option><option value="20">×20</option></select>
+    </label>
+    <button class="btn danger" id="estop" title="Ngắt nguồn bơm và huỷ mọi chuỗi thử (phím Esc)">■ DỪNG KHẨN</button>
+  </div>
+</header>
+
+<main>
+  <!-- ============ LEFT: settings ============ -->
+  <div class="col col-left">
+    <section class="card">
+      <div class="card-h"><h2>Đối tượng thử nghiệm</h2><span class="sub">Giá trị chỉnh định<br>phía thứ cấp</span></div>
+      <div class="card-b" id="settings">
+        <div class="frow"><span>Dòng danh định In</span><select id="s-inom"><option value="1">1 A</option><option value="5">5 A</option></select></div>
+        <div class="frow three"><span>Tỷ số TI (A/A)</span><input type="number" id="s-ctp" min="1" step="1"><input type="number" id="s-cts" min="1" step="1"></div>
+        <div class="frow"><span>Tần số</span><select id="s-freq"><option value="50">50 Hz</option><option value="60">60 Hz</option></select></div>
+        <div class="eyebrow" style="margin-top:4px">Phần tử bảo vệ</div>
+        <div id="elList" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div class="eyebrow" style="margin-top:4px">Dung sai đánh giá</div>
+        <div class="frow"><span>Sai số dòng khởi động (%)</span><input type="number" id="s-tolI" min="0" step="0.5"></div>
+        <div class="frow"><span>Sai số thời gian (%)</span><input type="number" id="s-tolT" min="0" step="0.5"></div>
+        <div class="frow"><span>Sai số thời gian tối thiểu (ms)</span><input type="number" id="s-tolTms" min="0" step="5"></div>
+        <div class="frow"><span>Hệ số trở về</span><input type="number" id="s-drop" min="0.5" max="0.999" step="0.01"></div>
+        <div class="frow"><span>Thời gian bơm tối đa (s)</span><input type="number" id="s-maxT" min="1" step="1"></div>
+        <p class="hint">Mặc định theo IEC 60255-151: ±5 % hoặc ±30 ms, lấy giá trị lớn hơn.</p>
+
+        <details class="sim" id="simBox">
+          <summary>Giả lập lỗi rơ le (luyện tập)</summary>
+          <div class="inner">
+            <p class="hint" style="color:var(--ink-2)">Thay đổi “bên trong” rơ le ảo mà bàn thử không biết. Dùng để tập phát hiện rơ le sai lệch hoặc đấu nối sai.</p>
+            <div class="frow"><span>Lệch ngưỡng khởi động (%)</span><input type="number" id="f-pe" step="1"></div>
+            <div class="frow"><span>Lệch thời gian tác động (%)</span><input type="number" id="f-te" step="1"></div>
+            <label class="chk"><input type="checkbox" id="f-swap"> I&gt; cài nhầm đặc tính dốc hơn</label>
+            <label class="chk"><input type="checkbox" id="f-notrip"> Tiếp điểm cắt hở mạch (đứt dây BI1)</label>
+            <button class="btn sm" id="f-reset" type="button">Khôi phục rơ le chuẩn</button>
+          </div>
+        </details>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ CENTER: modules ============ -->
+  <div class="col col-mid">
+    <section class="card">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" id="tab-man" aria-selected="true" aria-controls="pn-man">Bơm thủ công</button>
+        <button class="tab" role="tab" id="tab-ramp" aria-selected="false" aria-controls="pn-ramp">Dò ngưỡng<small>khởi động / trở về</small></button>
+        <button class="tab" role="tab" id="tab-tm" aria-selected="false" aria-controls="pn-tm">Đặc tính thời gian</button>
+      </div>
+
+      <!-- Manual -->
+      <div class="card-b" id="pn-man" role="tabpanel">
+        <div class="toolbar">
+          <span class="eyebrow">Mẫu sự cố</span>
+          <button class="btn sm" data-preset="3P">3 pha cân bằng</button>
+          <button class="btn sm" data-preset="AE">Pha A chạm đất</button>
+          <button class="btn sm" data-preset="AB">Ngắn mạch A–B</button>
+          <button class="btn sm" data-preset="ZERO">Về 0</button>
+        </div>
+        <table class="chtable">
+          <thead><tr><th style="width:40px">Bước</th><th>Kênh</th><th>Biên độ (A)</th><th>Góc (°)</th><th style="text-align:right">Sơ cấp</th></tr></thead>
+          <tbody id="manRows"></tbody>
+        </table>
+        <div class="toolbar">
+          <label class="inline" for="manStep">Bước Δ (A)<input type="number" id="manStep" step="0.01" min="0.001" style="width:84px"></label>
+          <button class="btn sm" id="manUp" title="Tăng các kênh đã chọn một bước">▲ Tăng</button>
+          <button class="btn sm" id="manDn" title="Giảm các kênh đã chọn một bước">▼ Giảm</button>
+          <label class="chk" style="margin-left:auto"><input type="checkbox" id="manStopTrip" checked> Ngắt bơm khi rơ le cắt</label>
+        </div>
+        <div class="readouts">
+          <div class="ro"><div class="k">Thời gian bơm</div><div class="v" id="manTime">0.000 s</div><div class="s" id="manTimeS">Chưa bơm</div></div>
+          <div class="ro"><div class="k">Dự kiến theo chỉnh định</div><div class="v" id="manExp">—</div><div class="s" id="manExpS"></div></div>
+          <div class="ro"><div class="k">Lần đo gần nhất</div><div class="v" id="manLast">—</div><div class="s" id="manLastS"></div></div>
+        </div>
+        <div class="toolbar">
+          <button class="btn primary big" id="manGo">▶ Bơm dòng</button>
+          <button class="btn big" id="manOff">Ngắt bơm</button>
+          <p class="hint" style="flex:1;min-width:200px">Có thể chỉnh biên độ khi đang bơm. Khi giá trị thay đổi giữa chừng, lần đo được ghi lại nhưng không đánh giá Đạt/Không đạt.</p>
+        </div>
+      </div>
+
+      <!-- Ramp -->
+      <div class="card-b" id="pn-ramp" role="tabpanel" hidden>
+        <p class="hint" style="color:var(--ink-2)">Tăng dòng theo từng bậc cho đến khi tiếp điểm khởi động (BI2) đóng, sau đó giảm dần đến khi nhả. Kết quả cho dòng khởi động, dòng trở về và hệ số trở về.</p>
+        <div class="grid2">
+          <label class="fld"><span>Phần tử cần thử</span><select id="rp-el"><option value="p51">I&gt; (51) – pha</option><option value="p50">I&gt;&gt; (50) – pha</option><option value="n51">Io&gt; (51N) – đất</option><option value="n50">Io&gt;&gt; (50N) – đất</option></select></label>
+          <label class="fld"><span>Kênh bơm</span><select id="rp-ch"><option value="3P">3 pha cân bằng</option><option value="A">Chỉ pha A</option><option value="B">Chỉ pha B</option><option value="C">Chỉ pha C</option></select></label>
+          <label class="fld"><span>Dòng bắt đầu (A)</span><input type="number" id="rp-start" step="0.01" min="0"></label>
+          <label class="fld"><span>Dòng kết thúc (A)</span><input type="number" id="rp-stop" step="0.01" min="0"></label>
+          <label class="fld"><span>Bước (A)</span><input type="number" id="rp-step" step="0.001" min="0.001"></label>
+          <label class="fld"><span>Thời gian mỗi bậc (s)</span><input type="number" id="rp-dwell" step="0.05" min="0.05"></label>
+        </div>
+        <div class="warnbox" id="rpWarn" hidden></div>
+        <div class="readouts">
+          <div class="ro"><div class="k">Dòng hiện tại</div><div class="v" id="rpNow">—</div><div class="s" id="rpState">Sẵn sàng</div></div>
+          <div class="ro"><div class="k">Khởi động</div><div class="v" id="rpPick">—</div><div class="s" id="rpPickS"></div></div>
+          <div class="ro"><div class="k">Trở về</div><div class="v" id="rpDrop">—</div><div class="s" id="rpDropS"></div></div>
+        </div>
+        <div class="toolbar">
+          <button class="btn primary big" id="rpGo">▶ Chạy dò ngưỡng</button>
+          <button class="btn sm" id="rpAuto" title="Đặt lại dải dò theo ngưỡng cài của phần tử">Tự đặt dải theo chỉnh định</button>
+        </div>
+      </div>
+
+      <!-- Timing -->
+      <div class="card-b" id="pn-tm" role="tabpanel" hidden>
+        <p class="hint" style="color:var(--ink-2)">Mỗi điểm bơm dòng bằng bội số ngưỡng của phần tử tham chiếu, đo thời gian đến khi BI1 đóng và so với đường đặc tính tổng hợp của mọi phần tử đang bật.</p>
+        <div class="toolbar">
+          <button class="btn sm" id="tmAdd">+ Thêm điểm</button>
+          <button class="btn sm" id="tmPresetP">Bộ điểm pha</button>
+          <button class="btn sm" id="tmPresetN">Bộ điểm chạm đất</button>
+          <button class="btn sm" id="tmClear">Xoá kết quả điểm</button>
+        </div>
+        <div class="tblwrap">
+          <table class="data">
+            <thead><tr><th>#</th><th>Kiểu sự cố</th><th>Tham chiếu</th><th>Bội số</th><th>I bơm</th><th>Kỳ vọng</th><th>Đo được</th><th>Kết quả</th><th></th></tr></thead>
+            <tbody id="tmRows"></tbody>
+          </table>
+        </div>
+        <div class="toolbar">
+          <button class="btn primary big" id="tmGo">▶ Chạy chuỗi thử</button>
+          <span class="hint" id="tmState">Sẵn sàng</span>
+        </div>
+        <canvas id="tcc" aria-label="Đồ thị đặc tính thời gian – dòng điện, thang log"></canvas>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--accent)"></i>Đặc tính pha</span>
+          <span><i class="sw" style="background:var(--pn)"></i>Đặc tính đất</span>
+          <span><i class="sw" style="background:var(--ok);border-radius:50%"></i>Đạt</span>
+          <span><i class="sw" style="background:var(--bad);border-radius:50%"></i>Không đạt</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-h"><h2>Biên bản kết quả</h2>
+        <div class="summary" id="resSum" style="margin-left:auto"></div>
+      </div>
+      <div class="card-b">
+        <div class="tblwrap">
+          <table class="data">
+            <thead><tr><th>#</th><th>Hạng mục</th><th>Điều kiện</th><th>Dòng bơm</th><th>Kỳ vọng</th><th>Đo được</th><th>Sai lệch</th><th>Kết quả</th></tr></thead>
+            <tbody id="resRows"></tbody>
+          </table>
+        </div>
+        <div class="toolbar">
+          <button class="btn sm" id="resCopy">Sao chép CSV</button>
+          <button class="btn sm" id="resClear">Xoá biên bản</button>
+          <span class="hint" id="copyMsg"></span>
+        </div>
+        <textarea class="copyfall" id="copyFall" hidden readonly></textarea>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-h"><h2>Nhật ký sự kiện</h2><span class="sub">Thời gian mô phỏng</span></div>
+      <div class="log" id="log"></div>
+    </section>
+  </div>
+
+  <!-- ============ RIGHT: relay + instruments ============ -->
+  <div class="col col-right">
+    <section class="relay" aria-label="Mặt trước rơ le ảo">
+      <div class="relay-top"><b>RƠ LE ẢO RQ-51</b><span>Quá dòng 3 pha + chạm đất</span></div>
+      <div class="lcd" id="lcd"></div>
+      <div class="leds">
+        <span class="led g on" id="ledRun"><i></i>Nguồn</span>
+        <span class="led y" id="ledStart"><i></i>Khởi động</span>
+        <span class="led r" id="ledTrip"><i></i>Cắt</span>
+        <span class="led r" id="ledFlt" title="Lỗi đấu nối tiếp điểm"><i></i>—</span>
+        <span class="led r" id="led-p51"><i></i>I&gt;</span>
+        <span class="led r" id="led-p50"><i></i>I&gt;&gt;</span>
+        <span class="led r" id="led-n51"><i></i>Io&gt;</span>
+        <span class="led r" id="led-n50"><i></i>Io&gt;&gt;</span>
+      </div>
+      <div class="terms" id="terms">
+        <span id="tmK">K1 Cắt → BI1</span><span id="tmS">K2 Khởi động → BI2</span>
+      </div>
+      <div class="relay-btns">
+        <button class="dbtn" id="ledReset">Xoá đèn (Reset)</button>
+        <button class="dbtn" id="lcdMode">Hiển thị: Thứ cấp</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-h"><h2>Đồ thị véc tơ</h2><span class="sub" id="phScale"></span></div>
+      <div class="card-b">
+        <svg id="phasor" viewBox="-120 -120 240 240" role="img" aria-label="Đồ thị véc tơ dòng điện 3 pha"></svg>
+        <div class="legend" id="phLegend"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-h"><h2>Dao động ký</h2><span class="sub">Dạng sóng 100 ms · xu hướng 10 s</span></div>
+      <div class="card-b">
+        <canvas id="scope" aria-label="Dạng sóng tức thời"></canvas>
+        <canvas id="trend" aria-label="Xu hướng hiệu dụng và trạng thái tiếp điểm"></canvas>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--pa)"></i>IA</span>
+          <span><i class="sw" style="background:var(--pb)"></i>IB</span>
+          <span><i class="sw" style="background:var(--pc)"></i>IC</span>
+          <span><i class="sw" style="background:var(--warn)"></i>BI2</span>
+          <span><i class="sw" style="background:var(--bad)"></i>BI1</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const rad = d => d * Math.PI / 180;
+
+/* ================= Đặc tính ================= */
+const CURVES = {
+  IEC_SI:  {name:'IEC Chuẩn (SI)',        f:(m,k)=>k*0.14/(Math.pow(m,0.02)-1)},
+  IEC_VI:  {name:'IEC Rất dốc (VI)',      f:(m,k)=>k*13.5/(m-1)},
+  IEC_EI:  {name:'IEC Cực dốc (EI)',      f:(m,k)=>k*80/(m*m-1)},
+  IEC_LTI: {name:'IEC Thời gian dài (LTI)',f:(m,k)=>k*120/(m-1)},
+  IEEE_MI: {name:'IEEE Hơi dốc (MI)',     f:(m,k)=>k*(0.0515/(Math.pow(m,0.02)-1)+0.114)},
+  IEEE_VI: {name:'IEEE Rất dốc (VI)',     f:(m,k)=>k*(19.61/(m*m-1)+0.491)},
+  IEEE_EI: {name:'IEEE Cực dốc (EI)',     f:(m,k)=>k*(28.2/(m*m-1)+0.1217)},
+  DT:      {name:'Độc lập (DT)',          f:(m,k)=>k},
+};
+const SWAP = {IEC_SI:'IEC_VI', IEC_VI:'IEC_EI', IEC_EI:'IEC_SI', IEC_LTI:'IEC_VI', IEEE_MI:'IEEE_VI', IEEE_VI:'IEEE_EI', IEEE_EI:'IEEE_MI', DT:'IEC_SI'};
+const EL = [
+  {id:'p51', lbl:'I>',   ansi:'51',  src:'P', idmt:true,  name:'Quá dòng pha có thời gian'},
+  {id:'p50', lbl:'I>>',  ansi:'50',  src:'P', idmt:false, name:'Quá dòng pha cắt nhanh'},
+  {id:'n51', lbl:'Io>',  ansi:'51N', src:'N', idmt:true,  name:'Chạm đất có thời gian'},
+  {id:'n50', lbl:'Io>>', ansi:'50N', src:'N', idmt:false, name:'Chạm đất cắt nhanh'},
+];
+const ELM = Object.fromEntries(EL.map(e=>[e.id,e]));
+const FAULTS = {'3P':'3 pha (L1-L2-L3)','AE':'Pha A – đất','BE':'Pha B – đất','CE':'Pha C – đất','AB':'Pha A – B','BC':'Pha B – C'};
+
+/* ================= Trạng thái ================= */
+const DEF = {
+  inom:1, ctp:400, cts:1, freq:50, drop:0.95, tolI:5, tolT:5, tolTms:30, maxT:20,
+  el:{ p51:{on:true,is:1.00,curve:'IEC_SI',tms:0.10}, p50:{on:true,is:8.00,t:0.05},
+       n51:{on:true,is:0.20,curve:'IEC_SI',tms:0.10}, n50:{on:false,is:2.00,t:0.10} },
+};
+let S = JSON.parse(JSON.stringify(DEF));
+const F = {pe:0, te:0, swap:false, noTrip:false};
+let speed = 1;
+const MAN = {ph:[{m:2,a:0},{m:2,a:-120},{m:2,a:120}], sel:[true,true,true], step:0.05};
+const RP = {el:'p51', ch:'3P', start:0.9, stop:1.2, step:0.01, dwell:0.2, run:null, last:null};
+const TM = {pts:[], run:null};
+const RES = [], LOG = [];
+let lcdPrimary = false;
+
+function presetPts(kind){
+  return kind==='N'
+    ? [2,4,6,10,12].map(m=>({fault:'AE',ref:'n51',mult:m,res:null}))
+    : [1.5,2,3,5,7,10].map(m=>({fault:'3P',ref:'p51',mult:m,res:null}));
+}
+TM.pts = presetPts('P');
+
+try{
+  const sv = JSON.parse(localStorage.getItem('bomdong.v1')||'null');
+  if(sv && sv.S){ S = Object.assign(JSON.parse(JSON.stringify(DEF)), sv.S); for(const k in DEF.el) S.el[k]=Object.assign({},DEF.el[k],sv.S.el&&sv.S.el[k]); }
+  if(sv && Array.isArray(sv.pts) && sv.pts.length) TM.pts = sv.pts.map(p=>({fault:p.fault,ref:p.ref,mult:+p.mult,res:null}));
+}catch(e){}
+function save(){ try{ localStorage.setItem('bomdong.v1', JSON.stringify({S, pts:TM.pts.map(p=>({fault:p.fault,ref:p.ref,mult:p.mult}))})); }catch(e){} }
+
+/* ================= Toán véc tơ ================= */
+function vsum(ph){ let x=0,y=0; for(const p of ph){x+=p.m*Math.cos(rad(p.a)); y+=p.m*Math.sin(rad(p.a));} return {m:Math.hypot(x,y), a:Math.atan2(y,x)*180/Math.PI}; }
+function meas(ph){ return {a:ph[0].m, b:ph[1].m, c:ph[2].m, n:vsum(ph).m}; }
+function opTime(e, s, m){
+  if(!(m>=1)) return Infinity;
+  if(e.idmt){ if(s.curve==='DT') return s.tms; if(m<=1.0005) return Infinity; return CURVES[s.curve].f(m, s.tms); }
+  return s.t;
+}
+function elInput(e, M){ return e.src==='P' ? Math.max(M.a,M.b,M.c) : M.n; }
+function expected(ph){
+  const M = meas(ph); let best = {t:Infinity, id:null};
+  for(const e of EL){ const s=S.el[e.id]; if(!s.on) continue; const t=opTime(e,s,elInput(e,M)/s.is); if(t<best.t) best={t,id:e.id}; }
+  return best;
+}
+function timeOK(exp, mea){
+  if(!isFinite(exp)) return mea==null;
+  if(mea==null) return false;
+  return Math.abs(mea-exp) <= Math.max(exp*S.tolT/100, S.tolTms/1000);
+}
+const prim = a => a * S.ctp / S.cts;
+const f3 = v => isFinite(v) ? v.toFixed(3) : '∞';
+const fT = v => v==null ? '—' : !isFinite(v) ? 'Không cắt' : (v<10 ? v.toFixed(3) : v.toFixed(2)) + ' s';
+const fA = v => (v>=100 ? v.toFixed(1) : v>=10 ? v.toFixed(2) : v.toFixed(3)) + ' A';
+const fP = v => { const p = prim(v); return (p>=1000 ? (p/1000).toFixed(2)+' kA' : p.toFixed(p>=100?0:1)+' A'); };
+
+/* ================= Rơ le ảo ================= */
+const R = {els:{}, startAt:null, tripAt:null, outStart:false, outTrip:false, anyStart:false,
+  led:{trip:false,p51:false,p50:false,n51:false,n50:false}, last:null, M:{a:0,b:0,c:0,n:0}};
+EL.forEach(e => R.els[e.id] = {st:false, acc:0, op:false});
+function relayStep(dt, ph, now){
+  const nz = () => 1 + (Math.random()-0.5)*0.002;
+  const M = meas(ph); M.a*=nz(); M.b*=nz(); M.c*=nz(); M.n*=nz(); R.M = M;
+  let anyS=false, anyO=false;
+  for(const e of EL){
+    const s=S.el[e.id], st=R.els[e.id];
+    if(!s.on){ st.st=false; st.op=false; st.acc=0; continue; }
+    const isA = s.is*(1+F.pe/100), m = elInput(e,M)/isA;
+    if(!st.st && m>=1) st.st = true;
+    else if(st.st && m<S.drop){ st.st=false; st.acc=0; st.op=false; }
+    if(st.st && !st.op){
+      const sx = (e.id==='p51' && F.swap) ? Object.assign({},s,{curve:SWAP[s.curve]}) : s;
+      const t = opTime(e,sx,m)*(1+F.te/100);
+      if(isFinite(t)){ st.acc += dt/Math.max(t,1e-4); if(st.acc>=1){ st.op=true; relayOperate(e,M,isA,now); } }
+    }
+    anyS = anyS || st.st; anyO = anyO || st.op;
+  }
+  R.anyStart = anyS;
+  if(anyS){ if(R.startAt===null) R.startAt = now+0.008; } else R.startAt = null;
+  R.outStart = R.startAt!==null && now>=R.startAt;
+  if(anyO){ if(R.tripAt===null) R.tripAt = now+0.010+Math.random()*0.010; } else R.tripAt = null;
+  R.outTrip = !F.noTrip && R.tripAt!==null && now>=R.tripAt;
+}
+function relayOperate(e, M, isA, now){
+  let ph;
+  if(e.src==='P') ph = ['A','B','C'].filter((p,i)=>[M.a,M.b,M.c][i]>=isA*S.drop).join('');
+  else ph = 'N';
+  R.led[e.id] = true; R.led.trip = true;
+  R.last = {lbl:e.lbl, ansi:e.ansi, ph, at:now, I: elInput(e,M)};
+  log(`Rơ le: ${e.lbl} (${e.ansi}) tác động, pha ${ph}, I = ${fA(elInput(e,M))}`, 'trip');
+}
+
+/* ================= Hợp bộ thử ================= */
+const T = {t:0, on:false, tOn:0, ph:[{m:0,a:0},{m:0,a:-120},{m:0,a:120}], bi:{start:false,trip:false}, mod:null};
+const ZERO = [{m:0,a:0},{m:0,a:0},{m:0,a:0}];
+function setOut(on, why){
+  if(on && !T.on){ T.on=true; T.tOn=T.t; log('Nguồn bơm BẬT: '+T.ph.map((p,i)=>'ABC'[i]+'='+p.m.toFixed(3)).join('  ')+' A','sys'); }
+  else if(!on && T.on){ T.on=false; log('Nguồn bơm TẮT'+(why?' ('+why+')':'')+' sau '+(T.t-T.tOn).toFixed(3)+' s','sys'); }
+}
+const HN = 12000;
+const H = {i:0, n:0, ia:new Float32Array(HN), ib:new Float32Array(HN), ic:new Float32Array(HN),
+  ra:new Float32Array(HN), rb:new Float32Array(HN), rc:new Float32Array(HN), st:new Uint8Array(HN), tr:new Uint8Array(HN)};
+function tick(dt){
+  T.t += dt;
+  if(T.mod && T.mod.tick) T.mod.tick();
+  const out = T.on ? T.ph : ZERO;
+  relayStep(dt, out, T.t);
+  const s=R.outStart, tr=R.outTrip;
+  if(s && !T.bi.start){ T.bi.start=true; log('BI2 đóng – rơ le khởi động','start'); if(T.mod && T.mod.onStart) T.mod.onStart(); }
+  else if(!s && T.bi.start){ T.bi.start=false; log('BI2 mở – rơ le trở về','start'); }
+  if(tr && !T.bi.trip){ T.bi.trip=true; log('BI1 đóng – tiếp điểm cắt, t = '+(T.on?(T.t-T.tOn).toFixed(3)+' s':'—'),'trip'); if(T.mod && T.mod.onTrip) T.mod.onTrip(); }
+  else if(!tr && T.bi.trip){ T.bi.trip=false; }
+  // history
+  const w = 2*Math.PI*S.freq*T.t, k=Math.SQRT2, i=H.i;
+  H.ia[i]=out[0].m*k*Math.sin(w+rad(out[0].a)); H.ib[i]=out[1].m*k*Math.sin(w+rad(out[1].a)); H.ic[i]=out[2].m*k*Math.sin(w+rad(out[2].a));
+  H.ra[i]=out[0].m; H.rb[i]=out[1].m; H.rc[i]=out[2].m; H.st[i]=s?1:0; H.tr[i]=tr?1:0;
+  H.i=(i+1)%HN; if(H.n<HN) H.n++;
+}
+function busySeq(){ return !!(T.mod && T.mod.seq); }
+function stopAll(why){
+  setOut(false, why);
+  if(T.mod && T.mod.abort) T.mod.abort();
+  T.mod = null; RP.run=null; TM.run=null;
+  syncButtons(); renderPts();
+}
+
+/* ================= Mô-đun: Thủ công ================= */
+const manMod = {
+  armed:false, changed:false,
+  tick(){
+    if(T.on && T.t-T.tOn >= S.maxT){
+      if(this.armed) this.record(null);
+      setOut(false,'hết thời gian tối đa'); T.mod=null; syncButtons();
+    }
+  },
+  onTrip(){
+    if(!this.armed) return;
+    this.record(T.t-T.tOn);
+    if($('#manStopTrip').checked){ setOut(false,'rơ le đã cắt'); T.mod=null; syncButtons(); }
+  },
+  record(mea){
+    this.armed=false;
+    const ex = expected(T.ph);
+    const desc = T.ph.map((p,i)=>'ABC'[i]+' '+p.m.toFixed(3)+'∠'+p.a.toFixed(0)+'°').join(', ');
+    const ok = this.changed ? null : timeOK(ex.t, mea);
+    $('#manLast').textContent = fT(mea==null?Infinity:mea);
+    $('#manLastS').textContent = ok==null ? 'Giá trị thay đổi khi bơm' : ok ? 'Đạt' : 'Không đạt';
+    addRes({mod:'Bơm thủ công', cond:ex.id?('Dự kiến '+ELM[ex.id].lbl):'Không có phần tử tác động', inj:desc,
+      exp:fT(ex.t), mea:fT(mea==null?Infinity:mea), dev:devStr(ex.t,mea), ok, note:this.changed?'thay đổi giữa chừng':''});
+  }
+};
+function devStr(exp, mea){
+  if(mea==null || !isFinite(exp)) return '—';
+  const d = mea-exp; return (d>=0?'+':'')+(d*1000).toFixed(0)+' ms ('+(d/exp*100>=0?'+':'')+(d/exp*100).toFixed(1)+' %)';
+}
+function manApply(){
+  if(T.mod===manMod && T.on){ T.ph = MAN.ph.map(p=>({...p})); manMod.changed = true; }
+}
+function manInject(){
+  if(busySeq()) return;
+  if(T.on) setOut(false);
+  T.ph = MAN.ph.map(p=>({...p}));
+  manMod.armed = true; manMod.changed = false; T.mod = manMod;
+  setOut(true); syncButtons();
+}
+
+/* ================= Mô-đun: Dò ngưỡng ================= */
+function rampPh(I){
+  const z = [{m:0,a:0},{m:0,a:-120},{m:0,a:120}];
+  if(RP.ch==='3P') z.forEach(p=>p.m=I); else z['ABC'.indexOf(RP.ch)].m = I;
+  return z;
+}
+const rampMod = {
+  seq:true,
+  tick(){
+    const r = RP.run; if(!r) return;
+    if(T.t - r.t0 < RP.dwell) return;
+    const st = T.bi.start;
+    if(r.dir==='up'){
+      if(st){ r.pick=r.I; r.dir='down'; log('Khởi động tại '+fA(r.I),'ok'); r.I = +(r.I-RP.step).toFixed(6); }
+      else { r.I = +(r.I+RP.step).toFixed(6); if(r.I > RP.stop+1e-9){ this.finish(); return; } }
+    } else {
+      if(!st){ r.drop=r.I; log('Trở về tại '+fA(r.I),'ok'); this.finish(); return; }
+      r.I = +(r.I-RP.step).toFixed(6); if(r.I<=0){ this.finish(); return; }
+    }
+    r.t0 = T.t; T.ph = rampPh(r.I);
+  },
+  finish(){
+    const r = RP.run; setOut(false,'kết thúc dò ngưỡng'); T.mod=null; RP.run=null;
+    const s = S.el[RP.el], e = ELM[RP.el], ch = RP.ch==='3P'?'3 pha':'pha '+RP.ch;
+    const pickOK = r.pick!=null && Math.abs(r.pick-s.is)/s.is <= S.tolI/100;
+    addRes({mod:'Dò ngưỡng khởi động', cond:e.lbl+' ('+e.ansi+'), '+ch, inj:fA(RP.start)+' → '+fA(RP.stop)+', bước '+RP.step,
+      exp:fA(s.is), mea:r.pick==null?'Không khởi động':fA(r.pick), dev:r.pick==null?'—':((r.pick-s.is)/s.is*100>=0?'+':'')+((r.pick-s.is)/s.is*100).toFixed(1)+' %', ok:pickOK});
+    if(r.pick!=null){
+      const ratio = r.drop!=null ? r.drop/r.pick : null;
+      const dOK = ratio!=null && Math.abs(ratio-S.drop) <= 0.02 + RP.step/r.pick;
+      addRes({mod:'Dò ngưỡng trở về', cond:e.lbl+' ('+e.ansi+'), '+ch, inj:'giảm từ '+fA(r.pick),
+        exp:'Kv = '+S.drop.toFixed(2), mea:r.drop==null?'Không trở về':fA(r.drop)+' · Kv = '+ratio.toFixed(3), dev:ratio==null?'—':((ratio-S.drop)>=0?'+':'')+(ratio-S.drop).toFixed(3), ok:dOK});
+    }
+    RP.last = r; renderRamp(); syncButtons();
+  },
+  abort(){ RP.run=null; renderRamp(); }
+};
+function rampStart(){
+  if(busySeq()) return;
+  if(T.on) stopAll();
+  RP.run = {dir:'up', I:RP.start, t0:T.t, pick:null, drop:null}; RP.last=null;
+  T.ph = rampPh(RP.start); T.mod = rampMod; setOut(true);
+  log('Bắt đầu dò ngưỡng '+ELM[RP.el].lbl,'sys'); syncButtons(); renderRamp();
+}
+function rampAuto(){
+  const s=S.el[RP.el], e=ELM[RP.el];
+  RP.start = +(s.is*0.9).toFixed(4); RP.stop = +(s.is*1.15).toFixed(4); RP.step = +(s.is*0.005).toFixed(4);
+  RP.dwell = e.idmt ? 0.2 : Math.max(0.2, s.t+0.1);
+  if(e.src==='N' && RP.ch==='3P') RP.ch='A';
+  writeRampInputs(); rampWarn();
+}
+function rampWarn(){
+  const box = $('#rpWarn'), msgs=[];
+  const e = ELM[RP.el], s=S.el[RP.el];
+  if(!s.on) msgs.push('Phần tử '+e.lbl+' đang tắt trong chỉnh định – rơ le sẽ không khởi động.');
+  if(e.src==='N' && RP.ch==='3P') msgs.push('Bơm 3 pha cân bằng cho dòng thứ tự không bằng 0, phần tử chạm đất không thấy dòng. Chọn bơm một pha.');
+  const M = meas(rampPh(RP.start));
+  for(const o of EL){ if(o.id===RP.el || !S.el[o.id].on) continue;
+    if(elInput(o,M) >= S.el[o.id].is) msgs.push('Ở dòng bắt đầu '+fA(RP.start)+', phần tử '+o.lbl+' ('+o.ansi+') đã khởi động trước. Hãy tắt phần tử đó hoặc đổi kênh bơm.'); }
+  const M2 = meas(rampPh(RP.stop));
+  for(const o of EL){ if(o.id===RP.el || !S.el[o.id].on) continue;
+    if(elInput(o,M) < S.el[o.id].is && elInput(o,M2) >= S.el[o.id].is) msgs.push('Dòng kết thúc vượt ngưỡng '+o.lbl+' ('+fA(S.el[o.id].is)+'). Kết quả có thể bị lẫn.'); }
+  box.hidden = !msgs.length; box.innerHTML = msgs.map(m=>'⚠ '+m).join('<br>');
+}
+
+/* ================= Mô-đun: Đặc tính thời gian ================= */
+function faultPh(p){
+  const I = p.mult * S.el[p.ref].is;
+  const z = [{m:0,a:0},{m:0,a:-120},{m:0,a:120}];
+  switch(p.fault){
+    case '3P': z.forEach(q=>q.m=I); break;
+    case 'AE': z[0].m=I; break; case 'BE': z[1].m=I; break; case 'CE': z[2].m=I; break;
+    case 'AB': z[0]={m:I,a:0}; z[1]={m:I,a:180}; break;
+    case 'BC': z[1]={m:I,a:-90}; z[2]={m:I,a:90}; break;
+  }
+  return z;
+}
+const tmMod = {
+  seq:true,
+  tick(){
+    const r=TM.run; if(!r) return;
+    if(r.phase==='pre' && T.t-r.t0 >= 0.3){
+      const p = TM.pts[r.i]; T.ph = faultPh(p); r.exp = expected(T.ph);
+      r.tmo = isFinite(r.exp.t) ? Math.min(S.maxT, Math.max(r.exp.t*2, r.exp.t+1)) : 3;
+      r.phase='flt'; setOut(true); renderPts();
+    } else if(r.phase==='flt' && T.t-T.tOn >= r.tmo){ this.point(null); }
+    else if(r.phase==='post' && T.t-r.t0 >= 0.3){
+      r.i++;
+      if(r.i>=TM.pts.length){ this.done(); return; }
+      r.phase='pre'; r.t0=T.t; renderPts();
+    }
+  },
+  onTrip(){ const r=TM.run; if(r && r.phase==='flt') this.point(T.t-T.tOn); },
+  point(mea){
+    const r=TM.run, p=TM.pts[r.i];
+    setOut(false, mea==null?'hết thời gian chờ':'rơ le đã cắt');
+    const ok = timeOK(r.exp.t, mea), I = p.mult*S.el[p.ref].is;
+    p.res = {mea, exp:r.exp.t, id:r.exp.id, ok, I};
+    addRes({mod:'Đặc tính thời gian', cond:FAULTS[p.fault]+' · '+p.mult+'×'+ELM[p.ref].lbl, inj:fA(I)+' ('+fP(I)+')',
+      exp:fT(r.exp.t)+(r.exp.id?' ['+ELM[r.exp.id].lbl+']':''), mea:fT(mea==null?Infinity:mea), dev:devStr(r.exp.t,mea), ok});
+    r.phase='post'; r.t0=T.t; renderPts(); drawTcc();
+  },
+  done(){ T.mod=null; TM.run=null; const pts=TM.pts.filter(p=>p.res), bad=pts.filter(p=>!p.res.ok).length;
+    log('Kết thúc chuỗi thử: '+(pts.length-bad)+'/'+pts.length+' điểm đạt', bad?'trip':'ok'); renderPts(); syncButtons(); },
+  abort(){ TM.run=null; }
+};
+function tmStart(){
+  if(busySeq() || !TM.pts.length) return;
+  if(T.on) stopAll();
+  TM.pts.forEach(p=>p.res=null);
+  TM.run = {i:0, phase:'pre', t0:T.t}; T.mod = tmMod;
+  log('Bắt đầu chuỗi thử đặc tính, '+TM.pts.length+' điểm','sys'); renderPts(); drawTcc(); syncButtons();
+}
+
+/* ================= Biên bản / nhật ký ================= */
+function addRes(r){ r.no = RES.length+1; RES.push(r); renderRes(); }
+function renderRes(){
+  const tb = $('#resRows');
+  if(!RES.length){ tb.innerHTML = '<tr><td colspan="8"><div class="empty">Chưa có kết quả. Bấm <b>▶ Bơm dòng</b> hoặc chạy một chuỗi thử để ghi vào biên bản.</div></td></tr>'; }
+  else tb.innerHTML = RES.slice().reverse().map(r=>`<tr><td class="num">${r.no}</td><td>${r.mod}</td><td>${esc(r.cond)}</td><td class="mono">${esc(r.inj)}</td><td class="mono">${esc(r.exp)}</td><td class="mono">${esc(r.mea)}</td><td class="mono">${esc(r.dev)}</td><td>${tag(r.ok)}</td></tr>`).join('');
+  const ok=RES.filter(r=>r.ok===true).length, bad=RES.filter(r=>r.ok===false).length;
+  $('#resSum').innerHTML = RES.length ? `<span class="tag ok">${ok} đạt</span><span class="tag bad">${bad} không đạt</span>` : '';
+}
+const tag = ok => ok===true ? '<span class="tag ok">ĐẠT</span>' : ok===false ? '<span class="tag bad">KHÔNG ĐẠT</span>' : '<span class="tag na">Ghi nhận</span>';
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function log(msg, kind){
+  LOG.unshift({t:T.t, msg, kind:kind||''}); if(LOG.length>200) LOG.pop();
+  logDirty = true;
+}
+let logDirty = true;
+function renderLog(){
+  if(!logDirty) return; logDirty=false;
+  $('#log').innerHTML = LOG.length ? LOG.map(l=>`<div class="k-${l.kind}"><span>${l.t.toFixed(3)} s</span><span>${esc(l.msg)}</span></div>`).join('') : '<div class="empty" style="display:block">Chưa có sự kiện.</div>';
+}
+
+/* ================= UI: Chỉnh định ================= */
+function buildSettings(){
+  const curveOpts = Object.entries(CURVES).map(([k,c])=>`<option value="${k}">${c.name}</option>`).join('');
+  $('#elList').innerHTML = EL.map(e=>`
+    <div class="el" id="card-${e.id}">
+      <div class="el-h"><label class="switch" title="Bật/tắt phần tử"><input type="checkbox" id="el-${e.id}-on"><span></span></label>
+        <b>${esc(e.lbl)}</b><span class="ansi">${e.ansi}</span><span class="nm">${e.name}</span></div>
+      <div class="frow"><span>Ngưỡng khởi động (A)</span><input type="number" id="el-${e.id}-is" min="0.01" step="0.01"></div>
+      <div class="derived" id="el-${e.id}-der"></div>
+      ${e.idmt ? `<div class="frow" style="grid-template-columns:70px 1fr"><span>Đặc tính</span><select id="el-${e.id}-curve">${curveOpts}</select></div>
+        <div class="frow"><span id="el-${e.id}-tl">Hệ số thời gian TMS</span><input type="number" id="el-${e.id}-tms" min="0.01" step="0.01"></div>`
+      : `<div class="frow"><span>Thời gian trễ (s)</span><input type="number" id="el-${e.id}-t" min="0" step="0.01"></div>`}
+    </div>`).join('');
+  writeSettings();
+  $('#settings').addEventListener('input', readSettings);
+  $('#settings').addEventListener('change', readSettings);
+}
+function writeSettings(){
+  $('#s-inom').value=S.inom; $('#s-ctp').value=S.ctp; $('#s-cts').value=S.cts; $('#s-freq').value=S.freq;
+  $('#s-tolI').value=S.tolI; $('#s-tolT').value=S.tolT; $('#s-tolTms').value=S.tolTms; $('#s-drop').value=S.drop; $('#s-maxT').value=S.maxT;
+  for(const e of EL){ const s=S.el[e.id];
+    $(`#el-${e.id}-on`).checked=s.on; $(`#el-${e.id}-is`).value=s.is;
+    if(e.idmt){ $(`#el-${e.id}-curve`).value=s.curve; $(`#el-${e.id}-tms`).value=s.tms; } else $(`#el-${e.id}-t`).value=s.t; }
+  $('#f-pe').value=F.pe; $('#f-te').value=F.te; $('#f-swap').checked=F.swap; $('#f-notrip').checked=F.noTrip;
+  derived();
+}
+function num(id, def){ const v = parseFloat($(id).value); return isFinite(v) ? v : def; }
+function readSettings(){
+  S.inom=+$('#s-inom').value; S.ctp=Math.max(1,num('#s-ctp',S.ctp)); S.cts=Math.max(1,num('#s-cts',S.cts)); S.freq=+$('#s-freq').value;
+  S.tolI=Math.max(0,num('#s-tolI',S.tolI)); S.tolT=Math.max(0,num('#s-tolT',S.tolT)); S.tolTms=Math.max(0,num('#s-tolTms',S.tolTms));
+  S.drop=Math.min(0.999,Math.max(0.5,num('#s-drop',S.drop))); S.maxT=Math.max(1,num('#s-maxT',S.maxT));
+  for(const e of EL){ const s=S.el[e.id];
+    s.on=$(`#el-${e.id}-on`).checked; s.is=Math.max(0.001,num(`#el-${e.id}-is`,s.is));
+    if(e.idmt){ s.curve=$(`#el-${e.id}-curve`).value; s.tms=Math.max(0.001,num(`#el-${e.id}-tms`,s.tms)); } else s.t=Math.max(0,num(`#el-${e.id}-t`,s.t)); }
+  F.pe=num('#f-pe',0); F.te=num('#f-te',0); F.swap=$('#f-swap').checked; F.noTrip=$('#f-notrip').checked;
+  derived(); save();
+}
+function derived(){
+  for(const e of EL){ const s=S.el[e.id];
+    $(`#card-${e.id}`).classList.toggle('off', !s.on);
+    $(`#el-${e.id}-der`).textContent = (s.is/S.inom).toFixed(2)+' × In  ·  sơ cấp '+fP(s.is);
+    if(e.idmt) $(`#el-${e.id}-tl`).textContent = s.curve==='DT' ? 'Thời gian trễ (s)' : 'Hệ số thời gian TMS'; }
+  const faulty = F.pe||F.te||F.swap||F.noTrip;
+  $('#simBox').querySelector('summary').textContent = 'Giả lập lỗi rơ le (luyện tập)'+(faulty?' · ĐANG BẬT':'');
+  renderManRows(false); renderPts(); rampWarn(); drawTcc();
+}
+
+/* ================= UI: Thủ công ================= */
+const PHC = ['--pa','--pb','--pc'];
+function renderManRows(full=true){
+  const tb = $('#manRows');
+  if(full || !tb.children.length){
+    tb.innerHTML = MAN.ph.map((p,i)=>`<tr>
+      <td><input type="checkbox" id="man-sel-${i}" ${MAN.sel[i]?'checked':''} aria-label="Áp dụng bước cho pha ${'ABC'[i]}"></td>
+      <td><span class="chname"><i class="sw" style="background:var(${PHC[i]})"></i>I${'ABC'[i]}</span></td>
+      <td><input type="number" id="man-m-${i}" step="0.01" min="0" value="${p.m}"></td>
+      <td><input type="number" id="man-a-${i}" step="1" value="${p.a}"></td>
+      <td class="mono" style="text-align:right;color:var(--ink-3)" id="man-p-${i}"></td></tr>`).join('');
+  }
+  MAN.ph.forEach((p,i)=>{ $('#man-p-'+i).textContent = fP(p.m); });
+}
+function readMan(){
+  MAN.ph.forEach((p,i)=>{ p.m=Math.max(0,num('#man-m-'+i,p.m)); p.a=num('#man-a-'+i,p.a); MAN.sel[i]=$('#man-sel-'+i).checked; });
+  MAN.step = Math.max(0.001, num('#manStep', MAN.step));
+  renderManRows(false); manApply();
+}
+function manPreset(k){
+  const I = Math.max(...MAN.ph.map(p=>p.m)) || 2;
+  const P = {
+    '3P':[{m:I,a:0},{m:I,a:-120},{m:I,a:120}],
+    'AE':[{m:I,a:0},{m:0,a:-120},{m:0,a:120}],
+    'AB':[{m:I,a:0},{m:I,a:180},{m:0,a:120}],
+    'ZERO':[{m:0,a:0},{m:0,a:-120},{m:0,a:120}],
+  }[k];
+  MAN.ph = P; renderManRows(true); manApply();
+}
+function manStep(sign){
+  MAN.ph.forEach((p,i)=>{ if(MAN.sel[i]) p.m = Math.max(0, +(p.m + sign*MAN.step).toFixed(6)); });
+  renderManRows(true); manApply();
+}
+
+/* ================= UI: Dò ngưỡng ================= */
+function writeRampInputs(){ $('#rp-el').value=RP.el; $('#rp-ch').value=RP.ch; $('#rp-start').value=RP.start; $('#rp-stop').value=RP.stop; $('#rp-step').value=RP.step; $('#rp-dwell').value=RP.dwell; }
+function readRamp(ev){
+  const prevEl = RP.el;
+  RP.el=$('#rp-el').value; RP.ch=$('#rp-ch').value;
+  RP.start=Math.max(0,num('#rp-start',RP.start)); RP.stop=Math.max(0,num('#rp-stop',RP.stop));
+  RP.step=Math.max(0.0005,num('#rp-step',RP.step)); RP.dwell=Math.max(0.05,num('#rp-dwell',RP.dwell));
+  if(ev && ev.target.id==='rp-el' && prevEl!==RP.el){ if(ELM[RP.el].src==='P') RP.ch='3P'; rampAuto(); }
+  rampWarn();
+}
+function renderRamp(){
+  const r = RP.run || RP.last;
+  $('#rpNow').textContent = RP.run ? fA(RP.run.I) : '—';
+  $('#rpState').textContent = RP.run ? (RP.run.dir==='up'?'Đang tăng – chờ BI2 đóng':'Đang giảm – chờ BI2 mở') : (RP.last?'Hoàn tất':'Sẵn sàng');
+  $('#rpPick').textContent = r && r.pick!=null ? fA(r.pick) : '—';
+  $('#rpPickS').textContent = r && r.pick!=null ? 'Cài '+fA(S.el[RP.el].is)+' · lệch '+((r.pick-S.el[RP.el].is)/S.el[RP.el].is*100).toFixed(1)+' %' : '';
+  $('#rpDrop').textContent = r && r.drop!=null ? fA(r.drop) : '—';
+  $('#rpDropS').textContent = r && r.drop!=null && r.pick ? 'Kv = '+(r.drop/r.pick).toFixed(3) : '';
+}
+
+/* ================= UI: Đặc tính thời gian ================= */
+function renderPts(){
+  const tb = $('#tmRows'); if(!tb) return;
+  const run = TM.run, busy = busySeq();
+  if(!TM.pts.length){ tb.innerHTML='<tr><td colspan="9"><div class="empty">Chưa có điểm thử. Bấm <b>+ Thêm điểm</b> hoặc chọn một bộ điểm mẫu.</div></td></tr>'; return; }
+  const fOpts = k => Object.entries(FAULTS).map(([v,n])=>`<option value="${v}" ${v===k?'selected':''}>${n}</option>`).join('');
+  const rOpts = k => EL.map(e=>`<option value="${e.id}" ${e.id===k?'selected':''}>${e.lbl} (${e.ansi})</option>`).join('');
+  tb.innerHTML = TM.pts.map((p,i)=>{
+    const I = p.mult*S.el[p.ref].is, ex = expected(faultPh(p));
+    const cur = run && run.i===i;
+    const r = p.res;
+    return `<tr class="${cur?'cur':''}"><td class="num">${i+1}</td>
+      <td><select data-i="${i}" data-k="fault" ${busy?'disabled':''}>${fOpts(p.fault)}</select></td>
+      <td><select data-i="${i}" data-k="ref" ${busy?'disabled':''}>${rOpts(p.ref)}</select></td>
+      <td><input type="number" data-i="${i}" data-k="mult" value="${p.mult}" step="0.1" min="0.1" ${busy?'disabled':''}></td>
+      <td class="mono num">${fA(I)}</td>
+      <td class="mono num">${fT(ex.t)}${ex.id?' <span style="color:var(--ink-3)">'+ELM[ex.id].lbl.replace(/>/g,'&gt;')+'</span>':''}</td>
+      <td class="mono num">${r?fT(r.mea==null?Infinity:r.mea):(cur?(run.phase==='flt'?'đang bơm…':'chờ…'):'—')}</td>
+      <td>${r?tag(r.ok):''}</td>
+      <td><button class="btn sm" data-del="${i}" ${busy?'disabled':''} aria-label="Xoá điểm ${i+1}">✕</button></td></tr>`;
+  }).join('');
+  const done = TM.pts.filter(p=>p.res).length;
+  $('#tmState').textContent = run ? `Điểm ${run.i+1}/${TM.pts.length} · ${run.phase==='flt'?'đang bơm':'nghỉ giữa điểm'}` : (done?`Đã đo ${done}/${TM.pts.length} điểm`:'Sẵn sàng');
+}
+
+/* ================= Vẽ ================= */
+let TK = {};
+function readTokens(){ const cs=getComputedStyle(document.documentElement); ['--pa','--pb','--pc','--pn','--ink','--ink-2','--ink-3','--grid','--grid-major','--accent','--ok','--bad','--warn','--plot','--line'].forEach(k=>TK[k]=cs.getPropertyValue(k).trim()); }
+function fit(c){
+  const r=c.getBoundingClientRect(), d=window.devicePixelRatio||1, W=Math.max(1,Math.round(r.width*d)), Hh=Math.max(1,Math.round(r.height*d));
+  if(c.width!==W||c.height!==Hh){ c.width=W; c.height=Hh; }
+  const ctx=c.getContext('2d'); ctx.setTransform(d,0,0,d,0,0); return {ctx, w:r.width, h:r.height};
+}
+function drawScope(){
+  const {ctx,w,h}=fit($('#scope')); ctx.clearRect(0,0,w,h);
+  const N=100, n=Math.min(N,H.n); let mx=0.5;
+  for(let k=0;k<n;k++){ const j=(H.i-1-k+HN)%HN; mx=Math.max(mx,Math.abs(H.ia[j]),Math.abs(H.ib[j]),Math.abs(H.ic[j])); }
+  mx = niceCeil(mx);
+  ctx.strokeStyle=TK['--grid']; ctx.lineWidth=1;
+  for(let g=1;g<5;g++){ const x=w*g/5; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+  ctx.strokeStyle=TK['--grid-major']; ctx.beginPath(); ctx.moveTo(0,h/2); ctx.lineTo(w,h/2); ctx.stroke();
+  const series=[[H.ia,'--pa'],[H.ib,'--pb'],[H.ic,'--pc']];
+  for(const [arr,col] of series){
+    ctx.strokeStyle=TK[col]; ctx.lineWidth=1.6; ctx.beginPath();
+    for(let k=0;k<n;k++){ const j=(H.i-n+k+HN)%HN; const x=(N-n+k)/(N-1)*w, y=h/2-arr[j]/mx*(h/2-8); k?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+    ctx.stroke();
+  }
+  ctx.fillStyle=TK['--ink-3']; ctx.font='10px "JetBrains Mono", monospace';
+  ctx.fillText('±'+mx.toFixed(mx<1?2:1)+' A đỉnh', 6, 12); ctx.fillText('20 ms/ô', w-58, h-6);
+}
+function drawTrend(){
+  const {ctx,w,h}=fit($('#trend')); ctx.clearRect(0,0,w,h);
+  const N=10000, n=Math.min(N,H.n), top=8, ah=h-44; let mx=0.5;
+  for(let k=0;k<n;k+=5){ const j=(H.i-1-k+HN)%HN; mx=Math.max(mx,H.ra[j],H.rb[j],H.rc[j]); }
+  mx=niceCeil(mx*1.1);
+  ctx.strokeStyle=TK['--grid']; ctx.lineWidth=1;
+  for(let g=0;g<=10;g++){ const x=w*g/10; ctx.beginPath(); ctx.moveTo(x,top); ctx.lineTo(x,top+ah); ctx.stroke(); }
+  const cols = Math.max(2, Math.floor(w));
+  const xOf = k => (N-n+k)/(N-1)*w;
+  const series=[[H.ra,'--pa'],[H.rb,'--pb'],[H.rc,'--pc']];
+  for(const [arr,col] of series){
+    ctx.strokeStyle=TK[col]; ctx.lineWidth=1.5; ctx.beginPath(); let first=true;
+    const stepK = Math.max(1, Math.floor(N/cols));
+    for(let k=0;k<n;k+=stepK){ const j=(H.i-n+k+HN)%HN; const x=xOf(k), y=top+ah-arr[j]/mx*ah; first?ctx.moveTo(x,y):ctx.lineTo(x,y); first=false; }
+    ctx.stroke();
+  }
+  const dig=[[H.st,'--warn',h-28],[H.tr,'--bad',h-12]];
+  for(const [arr,col,y0] of dig){
+    ctx.fillStyle=TK[col]; const stepK=Math.max(1,Math.floor(N/cols));
+    for(let k=0;k<n;k+=stepK){ const j=(H.i-n+k+HN)%HN; if(arr[j]) ctx.fillRect(xOf(k), y0-6, Math.max(1,w/cols*stepK/ (N/cols))+1, 8); }
+    ctx.strokeStyle=TK['--grid-major']; ctx.beginPath(); ctx.moveTo(0,y0+2); ctx.lineTo(w,y0+2); ctx.stroke();
+  }
+  ctx.fillStyle=TK['--ink-3']; ctx.font='10px "JetBrains Mono", monospace';
+  ctx.fillText(mx.toFixed(mx<1?2:1)+' A hd', 6, top+10); ctx.fillText('1 s/ô', w-38, top+10);
+  ctx.fillText('BI2', w-24, h-28); ctx.fillText('BI1', w-24, h-12);
+}
+function niceCeil(v){ const p=Math.pow(10,Math.floor(Math.log10(v))); const f=v/p; return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p; }
+
+const phSvg = $('#phasor'); let phEls=null;
+function buildPhasor(){
+  const ns='http://www.w3.org/2000/svg';
+  phSvg.innerHTML = `
+    <defs>${['pa','pb','pc','pn'].map(k=>`<marker id="ar-${k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--${k})"/></marker>`).join('')}</defs>
+    <circle r="100" fill="none" stroke="var(--grid-major)"/><circle r="50" fill="none" stroke="var(--grid)" stroke-dasharray="3 3"/>
+    <line x1="-108" y1="0" x2="108" y2="0" stroke="var(--grid-major)"/><line x1="0" y1="-108" x2="0" y2="108" stroke="var(--grid-major)"/>
+    <text x="104" y="-4" font-size="8" fill="var(--ink-3)" text-anchor="end" font-family="JetBrains Mono, monospace">0°</text>
+    <text x="4" y="-104" font-size="8" fill="var(--ink-3)" font-family="JetBrains Mono, monospace">90°</text>
+    <text id="phRing" x="52" y="10" font-size="8" fill="var(--ink-3)" font-family="JetBrains Mono, monospace"></text>
+    <g id="phVec"></g>`;
+  const g = phSvg.querySelector('#phVec'); phEls={};
+  ['pn','pa','pb','pc'].forEach(k=>{ const l=document.createElementNS(ns,'line'); l.setAttribute('stroke',`var(--${k})`); l.setAttribute('stroke-width', k==='pn'?2:3); l.setAttribute('stroke-linecap','round');
+    if(k==='pn') l.setAttribute('stroke-dasharray','5 4'); l.setAttribute('marker-end',`url(#ar-${k})`); l.setAttribute('x1',0); l.setAttribute('y1',0); g.appendChild(l); phEls[k]=l; });
+}
+function drawPhasor(){
+  const live = T.on, ph = live ? T.ph : MAN.ph, n = vsum(ph);
+  const mx = niceCeil(Math.max(0.1, ...ph.map(p=>p.m), n.m));
+  const set=(k,p)=>{ const r=p.m/mx*100; const l=phEls[k]; l.setAttribute('x2',(r*Math.cos(rad(p.a))).toFixed(2)); l.setAttribute('y2',(-r*Math.sin(rad(p.a))).toFixed(2)); l.style.opacity = p.m<1e-6?0:(live?1:.35); };
+  set('pa',ph[0]); set('pb',ph[1]); set('pc',ph[2]); set('pn',n);
+  phSvg.querySelector('#phRing').textContent = (mx/2).toFixed(mx<2?2:1)+' A';
+  $('#phScale').textContent = live ? 'Đang bơm' : 'Xem trước giá trị thủ công';
+  $('#phLegend').innerHTML = ph.map((p,i)=>`<span><i class="sw" style="background:var(${PHC[i]})"></i>I${'ABC'[i]} ${p.m.toFixed(3)} ∠${p.a.toFixed(0)}°</span>`).join('')
+    + `<span><i class="sw" style="background:var(--pn)"></i>3I0 ${n.m.toFixed(3)} ∠${n.m<1e-6?'0':n.a.toFixed(0)}°</span>`;
+}
+
+function drawTcc(){
+  const c=$('#tcc'); if(!c || c.offsetParent===null) return;
+  const {ctx,w,h}=fit(c); ctx.clearRect(0,0,w,h);
+  const L=50,Rm=14,Tp=12,B=34, pw=w-L-Rm, ph=h-Tp-B;
+  const iss = EL.filter(e=>S.el[e.id].on).map(e=>S.el[e.id].is); if(!iss.length) iss.push(1);
+  const xmin=Math.pow(10,Math.floor(Math.log10(Math.min(...iss)*0.7))), xmax=Math.pow(10,Math.ceil(Math.log10(Math.max(...iss)*3)));
+  const ymin=0.01, ymax=100;
+  const X=v=>L+(Math.log10(v)-Math.log10(xmin))/(Math.log10(xmax)-Math.log10(xmin))*pw;
+  const Y=v=>Tp+(Math.log10(ymax)-Math.log10(v))/(Math.log10(ymax)-Math.log10(ymin))*ph;
+  ctx.font='10px "JetBrains Mono", monospace'; ctx.lineWidth=1;
+  for(let d=Math.log10(xmin); d<Math.log10(xmax); d++) for(let m=1;m<10;m++){ const v=m*Math.pow(10,d); ctx.strokeStyle=TK[m===1?'--grid-major':'--grid']; ctx.beginPath(); ctx.moveTo(X(v),Tp); ctx.lineTo(X(v),Tp+ph); ctx.stroke(); }
+  for(let d=-2; d<2; d++) for(let m=1;m<10;m++){ const v=m*Math.pow(10,d); ctx.strokeStyle=TK[m===1?'--grid-major':'--grid']; ctx.beginPath(); ctx.moveTo(L,Y(v)); ctx.lineTo(L+pw,Y(v)); ctx.stroke(); }
+  ctx.strokeStyle=TK['--grid-major']; ctx.strokeRect(L,Tp,pw,ph);
+  ctx.fillStyle=TK['--ink-3']; ctx.textAlign='right'; ctx.textBaseline='middle';
+  [0.01,0.1,1,10,100].forEach(v=>ctx.fillText(v>=1?v+' s':v+'', L-6, Y(v)));
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  for(let d=Math.log10(xmin); d<=Math.log10(xmax); d++){ const v=Math.pow(10,d); ctx.fillText((v<1?v.toFixed(-d):v)+' A', X(v), Tp+ph+6); }
+  ctx.fillText('Dòng thứ cấp (thang log)', L+pw/2, Tp+ph+20);
+  const xs=[]; for(let k=0;k<=400;k++) xs.push(xmin*Math.pow(xmax/xmin,k/400));
+  iss.forEach(v=>{ xs.push(v*0.99999, v*1.00001); }); xs.sort((a,b)=>a-b);
+  const curveT = (src,x)=>{ let t=Infinity; for(const e of EL){ if(e.src!==src||!S.el[e.id].on) continue; t=Math.min(t,opTime(e,S.el[e.id],x/S.el[e.id].is)); } return t; };
+  ctx.save(); ctx.beginPath(); ctx.rect(L,Tp,pw,ph); ctx.clip();
+  for(const [src,col] of [['P','--accent'],['N','--pn']]){
+    // dải dung sai
+    ctx.fillStyle=TK[col]; ctx.globalAlpha=.12; ctx.beginPath(); let seg=[];
+    const flush=()=>{ if(seg.length>1){ ctx.moveTo(X(seg[0][0]),Y(seg[0][1])); seg.forEach(p=>ctx.lineTo(X(p[0]),Y(p[1]))); for(let q=seg.length-1;q>=0;q--) ctx.lineTo(X(seg[q][0]),Y(seg[q][2])); ctx.closePath(); } seg=[]; };
+    for(const x of xs){ const t=curveT(src,x); if(!isFinite(t)||t>ymax*3){ flush(); continue; } const d=Math.max(t*S.tolT/100,S.tolTms/1000); seg.push([x,t+d,Math.max(ymin/2,t-d)]); }
+    flush(); ctx.fill(); ctx.globalAlpha=1;
+    ctx.strokeStyle=TK[col]; ctx.lineWidth=2; ctx.beginPath(); let pen=false;
+    for(const x of xs){ const t=curveT(src,x); if(!isFinite(t)||t>ymax*3){ pen=false; continue; } const px=X(x),py=Y(Math.max(ymin/2,t)); pen?ctx.lineTo(px,py):ctx.moveTo(px,py); pen=true; }
+    ctx.stroke();
+  }
+  ctx.restore();
+  for(const p of TM.pts){ if(!p.res) continue; const r=p.res, x=X(r.I);
+    if(isFinite(r.exp)){ ctx.strokeStyle=TK['--ink-2']; ctx.lineWidth=1.2; ctx.beginPath(); ctx.arc(x,Y(r.exp),5,0,7); ctx.stroke(); }
+    const yv = r.mea==null ? Tp+6 : Y(Math.min(ymax,Math.max(ymin,r.mea)));
+    ctx.fillStyle=TK[r.ok?'--ok':'--bad'];
+    if(r.mea==null){ ctx.font='bold 13px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('×',x,yv); }
+    else { ctx.beginPath(); ctx.arc(x,yv,3.6,0,7); ctx.fill(); }
+  }
+  ctx.textAlign='left'; ctx.textBaseline='top'; ctx.fillStyle=TK['--ink-3']; ctx.font='10px "JetBrains Mono", monospace';
+  ctx.fillText('○ kỳ vọng  ● đo được  × không cắt', L+8, Tp+6);
+}
+
+/* ================= Khung hiển thị thời gian thực ================= */
+function lcdLine(lbl, v){ return lbl+' '+(lcdPrimary ? fP(v).padStart(9) : fA(v).padStart(9)); }
+function renderLive(){
+  $('#clock').textContent = 't = '+T.t.toFixed(3)+' s';
+  const pill=$('#outPill'); pill.classList.toggle('on',T.on);
+  $('#outTxt').textContent = T.on ? 'ĐANG BƠM · '+(T.t-T.tOn).toFixed(3)+' s' : 'Nguồn bơm: TẮT';
+  $('#biStart').classList.toggle('st',T.bi.start); $('#biTrip').classList.toggle('tr',T.bi.trip);
+  const M=R.M;
+  const st = R.anyStart ? '<span>KHỞI ĐỘNG</span>' : '<span class="dim">BÌNH THƯỜNG</span>';
+  const last = R.last ? esc(`CẮT ${R.last.lbl} ${R.last.ansi} pha ${R.last.ph}`) : '<span class="dim">Không có bản ghi cắt</span>';
+  $('#lcd').innerHTML = esc(lcdLine('IA',M.a))+'   '+st+'\n'+esc(lcdLine('IB',M.b))+'\n'+esc(lcdLine('IC',M.c))+'\n'+esc(lcdLine('3I0',M.n).replace('3I0 ','3I0'))+'\n'+last;
+  $('#ledStart').classList.toggle('on', R.anyStart);
+  $('#ledTrip').classList.toggle('on', R.led.trip);
+  EL.forEach(e=>$('#led-'+e.id).classList.toggle('on', R.led[e.id]));
+  $('#ledFlt').classList.toggle('on', F.noTrip && R.tripAt!==null);
+  $('#ledFlt').lastChild.textContent = F.noTrip ? 'Hở K1' : '—';
+  $('#tmK').classList.toggle('on', R.outTrip); $('#tmS').classList.toggle('on', R.outStart);
+  // manual readouts
+  if(T.mod===manMod && T.on){ $('#manTime').textContent=(T.t-T.tOn).toFixed(3)+' s'; $('#manTimeS').textContent='Đang bơm'+(manMod.changed?' · đã đổi giá trị':''); }
+  else if(!T.on) $('#manTimeS').textContent = 'Chưa bơm';
+  const ex = expected(T.mod===manMod && T.on ? T.ph : MAN.ph);
+  $('#manExp').textContent = fT(ex.t); $('#manExpS').textContent = ex.id ? 'Phần tử '+ELM[ex.id].lbl+' ('+ELM[ex.id].ansi+')' : 'Không phần tử nào tác động';
+  if(RP.run) renderRamp();
+  if(TM.run && TM.run.phase==='flt') $('#tmState').textContent = `Điểm ${TM.run.i+1}/${TM.pts.length} · đang bơm ${(T.t-T.tOn).toFixed(2)} s`;
+}
+function syncButtons(){
+  const seq = busySeq();
+  $('#manGo').disabled = seq; $('#manOff').disabled = !(T.on && T.mod===manMod);
+  $('#rpGo').disabled = seq; $('#rpGo').textContent = RP.run ? 'Đang dò…' : '▶ Chạy dò ngưỡng';
+  $('#tmGo').disabled = seq || !TM.pts.length; $('#tmGo').textContent = TM.run ? 'Đang chạy…' : '▶ Chạy chuỗi thử';
+  ['#tmAdd','#tmPresetP','#tmPresetN','#tmClear','#rpAuto'].forEach(s=>$(s).disabled=seq);
+  document.querySelectorAll('#pn-ramp input, #pn-ramp select').forEach(x=>x.disabled=!!RP.run);
+}
+
+/* ================= Vòng lặp ================= */
+let lastF = performance.now(), frameN=0;
+function frame(now){
+  const realDt = Math.min(0.1, (now-lastF)/1000); lastF = now;
+  const steps = Math.round(realDt*speed/0.001);
+  for(let k=0;k<steps;k++) tick(0.001);
+  renderLive(); drawScope(); drawTrend(); drawPhasor(); renderLog();
+  if(++frameN % 30 === 0) readTokens();
+  requestAnimationFrame(frame);
+}
+
+/* ================= Sự kiện ================= */
+function bind(){
+  // tabs
+  const tabs=[['#tab-man','#pn-man'],['#tab-ramp','#pn-ramp'],['#tab-tm','#pn-tm']];
+  tabs.forEach(([t,p])=>$(t).addEventListener('click',()=>{ tabs.forEach(([t2,p2])=>{ $(t2).setAttribute('aria-selected', t2===t); $(p2).hidden = p2!==p; }); if(p==='#pn-tm') drawTcc(); try{localStorage.setItem('bomdong.tab',t)}catch(e){} }));
+  try{ const t=localStorage.getItem('bomdong.tab'); if(t && $(t)) $(t).click(); }catch(e){}
+  $('#speed').addEventListener('change', e=>{ speed=+e.target.value; log('Tốc độ mô phỏng ×'+speed,'sys'); });
+  $('#estop').addEventListener('click', ()=>{ stopAll('dừng khẩn'); log('DỪNG KHẨN','trip'); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ stopAll('dừng khẩn'); } });
+  // manual
+  $('#manRows').addEventListener('input', readMan); $('#manRows').addEventListener('change', readMan);
+  $('#manStep').value = MAN.step; $('#manStep').addEventListener('input', readMan);
+  document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>manPreset(b.dataset.preset)));
+  $('#manUp').addEventListener('click',()=>manStep(1)); $('#manDn').addEventListener('click',()=>manStep(-1));
+  $('#manGo').addEventListener('click', manInject);
+  $('#manOff').addEventListener('click', ()=>{ manMod.armed=false; setOut(false,'người thử ngắt'); T.mod=null; syncButtons(); });
+  // ramp
+  $('#pn-ramp').addEventListener('change', readRamp); $('#pn-ramp').addEventListener('input', e=>{ if(e.target.type==='number') readRamp(e); });
+  $('#rpGo').addEventListener('click', rampStart); $('#rpAuto').addEventListener('click', rampAuto);
+  // timing
+  $('#tmRows').addEventListener('change', e=>{ const i=+e.target.dataset.i, k=e.target.dataset.k; if(isNaN(i)||!k) return;
+    TM.pts[i][k] = k==='mult' ? Math.max(0.1, parseFloat(e.target.value)||1) : e.target.value; TM.pts[i].res=null; save(); renderPts(); drawTcc(); });
+  $('#tmRows').addEventListener('click', e=>{ const b=e.target.closest('[data-del]'); if(!b) return; TM.pts.splice(+b.dataset.del,1); save(); renderPts(); drawTcc(); syncButtons(); });
+  $('#tmAdd').addEventListener('click', ()=>{ const l=TM.pts[TM.pts.length-1]; TM.pts.push(l?{fault:l.fault,ref:l.ref,mult:+(l.mult*1.5).toFixed(1),res:null}:{fault:'3P',ref:'p51',mult:2,res:null}); save(); renderPts(); syncButtons(); });
+  $('#tmPresetP').addEventListener('click', ()=>{ TM.pts=presetPts('P'); save(); renderPts(); drawTcc(); syncButtons(); });
+  $('#tmPresetN').addEventListener('click', ()=>{ TM.pts=presetPts('N'); save(); renderPts(); drawTcc(); syncButtons(); });
+  $('#tmClear').addEventListener('click', ()=>{ TM.pts.forEach(p=>p.res=null); renderPts(); drawTcc(); });
+  $('#tmGo').addEventListener('click', tmStart);
+  // results
+  $('#resClear').addEventListener('click', ()=>{ RES.length=0; renderRes(); $('#copyMsg').textContent=''; $('#copyFall').hidden=true; });
+  $('#resCopy').addEventListener('click', ()=>{
+    const rows=[['STT','Hạng mục','Điều kiện','Dòng bơm','Kỳ vọng','Đo được','Sai lệch','Kết quả']].concat(RES.map(r=>[r.no,r.mod,r.cond,r.inj,r.exp,r.mea,r.dev,r.ok===true?'Đạt':r.ok===false?'Không đạt':'Ghi nhận']));
+    const csv = rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+    const fb = ()=>{ const ta=$('#copyFall'); ta.hidden=false; ta.value=csv; ta.focus(); ta.select(); $('#copyMsg').textContent='Không truy cập được bộ nhớ tạm. Văn bản đã được chọn sẵn, hãy nhấn Ctrl+C.'; };
+    try{ navigator.clipboard.writeText(csv).then(()=>{ $('#copyMsg').textContent='Đã sao chép '+RES.length+' dòng. Dán vào Excel hoặc Google Sheets.'; $('#copyFall').hidden=true; }, fb); }catch(e){ fb(); }
+  });
+  // relay
+  $('#ledReset').addEventListener('click', ()=>{ for(const k in R.led) R.led[k]=false; R.last=null; log('Xoá đèn chỉ thị rơ le','sys'); });
+  $('#lcdMode').addEventListener('click', e=>{ lcdPrimary=!lcdPrimary; e.target.textContent='Hiển thị: '+(lcdPrimary?'Sơ cấp':'Thứ cấp'); });
+  $('#f-reset').addEventListener('click', ()=>{ F.pe=0;F.te=0;F.swap=false;F.noTrip=false; writeSettings(); log('Khôi phục rơ le chuẩn','sys'); });
+  window.addEventListener('resize', drawTcc);
+  if(window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', ()=>{ readTokens(); drawTcc(); });
+  new MutationObserver(()=>{ readTokens(); drawTcc(); }).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+}
+
+/* ================= Khởi động ================= */
+readTokens(); buildSettings(); renderManRows(true); writeRampInputs(); rampAuto(); buildPhasor(); bind();
+renderRes(); renderRamp(); renderPts(); syncButtons();
+log('Hợp bộ sẵn sàng. Rơ le ảo cấp nguồn, đấu K1→BI1, K2→BI2.','sys');
+requestAnimationFrame(t=>{ lastF=t; drawTcc(); requestAnimationFrame(frame); });
+})();
+</script>

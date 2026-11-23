@@ -2,41 +2,32 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap">
 <style>
-/* Layout: full-height app — side panel (desktop) / bottom sheet (phone) + canvas map. Map palette follows street-map conventions: blue water, green parks, amber arterials, teal route. */
+/* Layout: full-height app — side panel (desktop) / bottom sheet (phone) + 3D map.
+   The map itself is a fixed night-navigation look (navy ground, grey roads with lane marks, extruded blocks);
+   the panel follows the viewer's light/dark theme. */
 :root{
   --panel:#ffffff; --ink:#1c2430; --muted:#5b6676; --line:#e2e5e9; --chip:#f2f4f6;
-  --land:#eef0eb; --block:#e6e8e2; --park:#d3e6c6; --water:#a7cbe9; --water-ink:#356a97;
-  --road:#ffffff; --road-case:#cdd2d8; --major:#fde3a1; --major-case:#dcb258;
-  --trunk:#f7b56a; --trunk-case:#cf8538; --rail:#868c95;
-  --label:#384150; --halo:#ffffff;
-  --accent:#0e8a6b; --accent-soft:#d9f1ea; --accent-ink:#ffffff; --route-case:#0a5f4a;
+  --accent:#0e8a6b; --accent-ink:#ffffff;
   --start:#1c7ed6; --end:#d6336c;
   --shadow:0 2px 10px rgba(20,30,40,.14);
+  /* night map palette (same in both themes) */
+  --m-ground:#0e1422; --m-ctrl:#1b2333; --m-ctrl-ink:#e8ecf3; --m-ctrl-line:#2c3648;
   --font:"Be Vietnam Pro", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --panel:#15191e; --ink:#e7eaee; --muted:#9aa4b1; --line:#2a3038; --chip:#1f252c;
-  --land:#1b1f24; --block:#20252b; --park:#1e3326; --water:#173149; --water-ink:#86b6de;
-  --road:#3a414a; --road-case:#252a30; --major:#6a5a30; --major-case:#3b331f;
-  --trunk:#8b5b2b; --trunk-case:#4b3119; --rail:#6d737c;
-  --label:#d5dae1; --halo:#1b1f24;
-  --accent:#2bc59a; --accent-soft:#163b31; --accent-ink:#0b1f19; --route-case:#0d4a3a;
-  --start:#4dabf7; --end:#f06595;
+  --panel:#141922; --ink:#e7eaee; --muted:#9aa4b1; --line:#283040; --chip:#1d2430;
+  --accent:#2bc59a; --accent-ink:#0b1f19; --start:#4dabf7; --end:#f06595;
   --shadow:0 2px 12px rgba(0,0,0,.5); color-scheme:dark;
 }}
 :root[data-theme="dark"]{
-  --panel:#15191e; --ink:#e7eaee; --muted:#9aa4b1; --line:#2a3038; --chip:#1f252c;
-  --land:#1b1f24; --block:#20252b; --park:#1e3326; --water:#173149; --water-ink:#86b6de;
-  --road:#3a414a; --road-case:#252a30; --major:#6a5a30; --major-case:#3b331f;
-  --trunk:#8b5b2b; --trunk-case:#4b3119; --rail:#6d737c;
-  --label:#d5dae1; --halo:#1b1f24;
-  --accent:#2bc59a; --accent-soft:#163b31; --accent-ink:#0b1f19; --route-case:#0d4a3a;
-  --start:#4dabf7; --end:#f06595;
+  --panel:#141922; --ink:#e7eaee; --muted:#9aa4b1; --line:#283040; --chip:#1d2430;
+  --accent:#2bc59a; --accent-ink:#0b1f19; --start:#4dabf7; --end:#f06595;
   --shadow:0 2px 12px rgba(0,0,0,.5); color-scheme:dark;
 }
 html,body{height:100%}
+[hidden]{display:none!important}
 body{background:var(--panel);color:var(--ink);font-family:var(--font);font-size:14px;overflow:hidden}
 .app{display:grid;grid-template-columns:360px 1fr;height:100%}
 .panel{display:flex;flex-direction:column;min-width:0;min-height:0;border-right:1px solid var(--line);background:var(--panel);
@@ -52,15 +43,16 @@ body{background:var(--panel);color:var(--ink);font-family:var(--font);font-size:
 .tabs button{flex:1;font:inherit;font-weight:600;font-size:13px;border:0;background:transparent;color:var(--muted);padding:7px 0;border-radius:8px;cursor:pointer}
 .tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:12.5px;font-weight:500;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:5px 10px;border-radius:999px;cursor:pointer}
-.chip i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.chip{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:12.5px;font-weight:500;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:4px 10px 4px 4px;border-radius:999px;cursor:pointer}
+.chip svg{width:20px;height:20px;border-radius:50%;background:#fff;padding:3px;box-sizing:border-box;box-shadow:0 0 0 1px var(--line)}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
 .chip .n{color:var(--muted);font-variant-numeric:tabular-nums}
 .chip[aria-pressed="true"] .n{color:inherit;opacity:.7}
 .list{flex:1;min-height:0;overflow:auto;margin:0 -16px 0 0;padding:0 16px 16px 0;display:flex;flex-direction:column}
-.item{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer;text-align:left;background:none;border-left:0;border-right:0;border-top:0;font:inherit;color:inherit}
+.item{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer;text-align:left;background:none;border-left:0;border-right:0;border-top:0;font:inherit;color:inherit}
 .item:hover,.item:focus-visible{background:var(--chip);outline:none}
-.item .dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700}
+.item .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#fff;box-shadow:0 0 0 1px var(--line)}
+.item .ic svg{width:18px;height:18px}
 .item b{display:block;font-weight:600;font-size:14px;line-height:1.35}
 .item span{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
 .empty{color:var(--muted);padding:16px 4px;line-height:1.5}
@@ -76,34 +68,50 @@ body{background:var(--panel);color:var(--ink);font-family:var(--font);font-size:
 .field .v{font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .field .v.ph{color:var(--muted);font-weight:400}
 .field.picking{outline:2px solid var(--accent)}
-.sum{display:flex;gap:16px;align-items:baseline;padding:4px 2px}
+.sum{display:flex;gap:16px;align-items:baseline;padding:4px 2px;flex-wrap:wrap}
 .sum strong{font-size:22px;font-variant-numeric:tabular-nums}
 .sum span{color:var(--muted)}
 .steps{display:flex;flex-direction:column}
 .step{display:grid;grid-template-columns:1fr auto;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);font-size:13.5px}
 .step em{font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums}
 .foot{color:var(--muted);font-size:11.5px;line-height:1.5;padding:8px 0 calc(12px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--line)}
-.mapwrap{position:relative;min-width:0;min-height:0;background:var(--land);overflow:hidden;touch-action:none}
-canvas{display:block;width:100%;height:100%;cursor:grab}
-canvas.drag{cursor:grabbing}
-canvas.pick{cursor:crosshair}
-.ctrl{position:absolute;right:max(12px, env(safe-area-inset-right, 0px));top:12px;display:flex;flex-direction:column;gap:6px}
-.ctrl button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:18px;font-weight:600;cursor:pointer;box-shadow:var(--shadow);display:grid;place-items:center}
-.scale{position:absolute;left:12px;bottom:12px;font-size:11px;color:var(--label);font-weight:600}
-.scale div{height:5px;border:2px solid var(--label);border-top:0;margin-top:2px}
-.toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:999px;font-size:13px;font-weight:500;box-shadow:var(--shadow);max-width:calc(100% - 120px);text-align:center}
-.loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:14px}
+
+/* map */
+.mapwrap{position:relative;min-width:0;min-height:0;background:var(--m-ground);overflow:hidden}
+#map{position:absolute;inset:0}
+#ov{position:absolute;inset:0;pointer-events:none;width:100%;height:100%}
+.maplibregl-map{position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;font:inherit}
+.maplibregl-canvas{position:absolute;left:0;top:0}
+.maplibregl-canvas-container.maplibregl-interactive{cursor:grab}
+.maplibregl-canvas-container.maplibregl-interactive:active{cursor:grabbing}
+.picking-on .maplibregl-canvas-container.maplibregl-interactive{cursor:crosshair}
+.ctrl{position:absolute;right:max(12px, env(safe-area-inset-right, 0px));top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px}
+.ctrl button{width:42px;height:42px;border-radius:12px;border:1px solid var(--m-ctrl-line);background:var(--m-ctrl);color:var(--m-ctrl-ink);font:inherit;font-size:14px;font-weight:700;cursor:pointer;display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.ctrl button:focus-visible{outline:2px solid #2bc59a;outline-offset:2px}
+.ctrl .zoom{font-size:20px;font-weight:500}
+#compass svg{transition:transform .15s}
+.scale{position:absolute;left:12px;bottom:12px;font-size:11px;color:#c9d1df;font-weight:600}
+.scale div{height:5px;border:2px solid #c9d1df;border-top:0;margin-top:2px}
+.attr{position:absolute;right:max(8px, env(safe-area-inset-right, 0px));bottom:6px;font-size:10px;color:#8592a8}
+.toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#e8ecf3;color:#0e1422;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:500;box-shadow:0 4px 14px rgba(0,0,0,.35);max-width:calc(100% - 120px);text-align:center}
+.nav{position:absolute;left:12px;top:12px;display:flex;flex-direction:column;gap:6px;max-width:min(320px, calc(100% - 90px))}
+.nav .top{background:#0f7a5f;color:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.nav .top small{display:block;opacity:.8;font-size:11.5px}
+.nav .top b{display:block;font-size:16px;line-height:1.3}
+.nav .bot{background:var(--m-ctrl);color:var(--m-ctrl-ink);border:1px solid var(--m-ctrl-line);border-radius:12px;padding:8px 12px;display:flex;gap:12px;align-items:center;font-variant-numeric:tabular-nums}
+.nav .bot button{margin-left:auto;font:inherit;font-weight:600;font-size:12px;background:#d6336c;color:#fff;border:0;border-radius:8px;padding:6px 10px;cursor:pointer}
+.loading{position:absolute;inset:0;display:grid;place-items:center;color:#c9d1df;font-size:14px;text-align:center;padding:16px}
 @media (max-width:760px){
   .app{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}
   .mapwrap{grid-row:1}
-  .panel{grid-row:2;border-right:0;border-top:1px solid var(--line);max-height:46vh;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-top:12px;gap:10px}
-  .panel{overflow-y:auto}
+  .panel{grid-row:2;border-right:0;border-top:1px solid var(--line);max-height:46vh;overflow-y:auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-top:12px;gap:10px}
   .panel>*{flex-shrink:0}
   #view-find,#view-route{flex:none!important}
   .list{overflow:visible;flex:none}
   .panel.collapsed .hide-c{display:none!important}
   .brand h1{font-size:17px}
   .grab{display:block!important}
+  .ctrl{top:auto;bottom:28px;transform:none}
 }
 .grab{display:none;width:40px;height:4px;border-radius:2px;background:var(--line);margin:-4px auto 0;border:0;padding:0;cursor:pointer}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
@@ -126,112 +134,254 @@ canvas.pick{cursor:crosshair}
       <div id="sel"></div>
       <div class="list" id="list"></div>
     </div>
-    <div id="view-route" class="hide-c" hidden style="flex-direction:column;gap:10px;min-height:0;flex:1">
+    <div id="view-route" class="hide-c" style="display:none;flex-direction:column;gap:10px;min-height:0;flex:1">
       <div class="field" id="f-a"><i class="pin" style="background:var(--start)"></i><div class="v ph" id="v-a">Chọn điểm đi</div><button class="btn" id="pick-a">Chọn trên bản đồ</button></div>
       <div class="field" id="f-b"><i class="pin" style="background:var(--end)"></i><div class="v ph" id="v-b">Chọn điểm đến</div><button class="btn" id="pick-b">Chọn trên bản đồ</button></div>
       <div class="row"><button class="btn" id="swap">Đảo chiều</button><button class="btn" id="clear">Xoá tuyến</button></div>
       <div id="route-out" class="list" style="gap:6px"></div>
     </div>
-    <div class="foot hide-c">Dữ liệu đường phố © OpenStreetMap contributors (ODbL), tải ngày 23/11/2026. Thời gian đi là ước tính theo loại đường; khi chạy thực tế, bấm “Dẫn đường bằng Google Maps” để có tình trạng giao thông.</div>
+    <div class="foot hide-c">Dữ liệu © OpenStreetMap contributors (ODbL), tải ngày 23/11/2026. Chiều cao nhà phần lớn là ước tính 2–4 tầng vì OSM chưa ghi số tầng. Thời gian đi là ước tính; khi chạy thực tế, bấm “Dẫn đường bằng Google Maps” để có tình trạng giao thông.</div>
   </aside>
   <main class="mapwrap" id="wrap">
-    <canvas id="map" aria-label="Bản đồ khu vực Phủ Lý"></canvas>
+    <div id="map"></div>
+    <canvas id="ov" aria-hidden="true"></canvas>
+    <div class="nav" id="nav" hidden>
+      <div class="top"><small id="nav-dist">Còn 0 m</small><b id="nav-road">—</b></div>
+      <div class="bot"><span id="nav-eta">—</span><button id="nav-stop">Thoát</button></div>
+    </div>
     <div class="ctrl">
-      <button id="zin" aria-label="Phóng to">+</button>
-      <button id="zout" aria-label="Thu nhỏ">−</button>
-      <button id="home" aria-label="Về trung tâm Phủ Lý" style="font-size:14px">⌂</button>
+      <button id="compass" aria-label="Xoay về hướng Bắc"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l4 10h-8z" fill="#ff5a5a"/><path d="M12 22l-4-10h8z" fill="#e8ecf3"/></svg></button>
+      <button id="dim" aria-label="Chuyển 2D / 3D">2D</button>
+      <button id="zin" class="zoom" aria-label="Phóng to">+</button>
+      <button id="zout" class="zoom" aria-label="Thu nhỏ">−</button>
+      <button id="home" aria-label="Về trung tâm Phủ Lý"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8z" fill="#e8ecf3"/></svg></button>
     </div>
     <div class="scale" id="scale"><span></span><div></div></div>
+    <div class="attr">© OpenStreetMap</div>
     <div class="toast" id="toast" hidden></div>
     <div class="loading" id="loading">Đang tải bản đồ…</div>
   </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
 (async function(){
+const $ = id => document.getElementById(id);
+if(!window.maplibregl){ $('loading').textContent='Không tải được thư viện bản đồ. Hãy kiểm tra mạng rồi tải lại trang.'; return; }
+
+/* ---------- categories + pictograms (24×24 SVG paths) ---------- */
 const CATS = {
-  gov:    {name:'Cơ quan',      color:'#b4532a', ch:'CQ'},
-  health: {name:'Bệnh viện',    color:'#d6336c', ch:'+'},
-  hotel:  {name:'Khách sạn',    color:'#7048e8', ch:'KS'},
-  transit:{name:'Ga, bến xe',   color:'#1c7ed6', ch:'G'},
-  bank:   {name:'Ngân hàng',    color:'#0b7285', ch:'₫'},
-  fuel:   {name:'Cây xăng',     color:'#5c940d', ch:'X'},
-  edu:    {name:'Trường học',   color:'#e67700', ch:'T'},
-  shop:   {name:'Chợ, siêu thị',color:'#ae3ec9', ch:'C'},
-  sight:  {name:'Đền, chùa, công viên', color:'#5f6b7a', ch:'•'},
+  gov:    {name:'Cơ quan',       color:'#c2541f', icon:'M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z'},
+  health: {name:'Bệnh viện',     color:'#e03131', icon:'M9.5 3h5v6.5H21v5h-6.5V21h-5v-6.5H3v-5h6.5z'},
+  hotel:  {name:'Khách sạn',     color:'#6741d9', icon:'M2 6h2.5v7H11V8.5h7.5A3.5 3.5 0 0 1 22 12v7h-2.5v-2.5h-15V19H2zM7.8 12.2a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4z'},
+  transit:{name:'Ga, bến xe',    color:'#1c7ed6', icon:'M6 2.5h12a2.5 2.5 0 0 1 2.5 2.5v11.5a2 2 0 0 1-1.2 1.8V21h-3v-2.2H7.7V21h-3v-2.7a2 2 0 0 1-1.2-1.8V5A2.5 2.5 0 0 1 6 2.5zM6 6v5.5h12V6zm1.8 7.6a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8zm8.4 0a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8z'},
+  bank:   {name:'Ngân hàng',     color:'#3b5bdb', icon:'M12 2l10 5v2.5H2V7zM4 11h3v7H4zm6.5 0h3v7h-3zM17 11h3v7h-3zM2 19.5h20V22H2z'},
+  fuel:   {name:'Cây xăng',      color:'#2f9e44', icon:'M5 2.5h8A1.5 1.5 0 0 1 14.5 4v17.5h-11V4A1.5 1.5 0 0 1 5 2.5zM6 5.5V10h6V5.5zM15.5 7l4 4v7.3a2.7 2.7 0 0 1-5.4 0V15h1.7v3.3a1 1 0 0 0 2 0v-6.6l-2.3-2.3z'},
+  edu:    {name:'Trường học',    color:'#e8590c', icon:'M12 3L1 8.5l11 5.5 9-4.5V16h2V8.5zM5.5 12.6v4.1c0 1.9 2.9 3.3 6.5 3.3s6.5-1.4 6.5-3.3v-4.1L12 15.9z'},
+  shop:   {name:'Chợ, siêu thị', color:'#ae3ec9', icon:'M5.5 8h13l1.2 13.5H4.3zM8.5 8V6.5a3.5 3.5 0 0 1 7 0V8h-2.2V6.5a1.3 1.3 0 0 0-2.6 0V8z'},
+  sight:  {name:'Đền, chùa, công viên', color:'#d4a017', icon:'M12 1.5l3.5 3.5h-7zM3 7h18l-3.5 3.5h-11zM7 11.5h10V13H7zM5.5 16.5h13L16 13.5H8zM7.2 16.5h2.3V21H7.2zm7.3 0h2.3V21h-2.3zM3.5 21h17v1.5h-17z'},
 };
-const SPEED = [60,45,35,30,25,20,12];            // km/h by road class, for ETA
-const WIDTH = [24,22,18,14,11,8,6];              // road width in metres
-const MINPX = [3,3,2.6,2,1.4,.8,.6];             // minimum drawn width in px
-const SHOW  = [0,0,0,0.035,0.06,0.09,0.25];      // px-per-metre at which class appears
+const ICON = {}; for(const k in CATS) ICON[k]=new Path2D(CATS[k].icon);
+const svgIcon = k => `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${CATS[k].color}" fill-rule="evenodd" d="${CATS[k].icon}"/></svg>`;
+
+const SPEED = [60,45,35,30,25,20,12];           // km/h by road class, for ETA
 const LAT0 = 20.5455, LON0 = 105.9135;
 const KX = 111320*Math.cos(LAT0*Math.PI/180), KY = 110574;
 
-const $ = id => document.getElementById(id);
-const cv = $('map'), ctx = cv.getContext('2d'), wrap = $('wrap');
 let D;
 try { D = await fetch('data.json').then(r => { if(!r.ok) throw 0; return r.json(); }); }
 catch(e){ $('loading').textContent = 'Không tải được dữ liệu bản đồ. Hãy tải lại trang.'; return; }
 const Q = D.q;
 
-/* ---------- decode geometry into projected metres ---------- */
+/* ---------- decode ---------- */
 function dec(a){
-  const n = a.length/2, out = new Float64Array(a.length), ints = new Int32Array(a.length);
-  let x=0,y=0;
-  for(let i=0;i<n;i++){ x+=a[2*i]; y+=a[2*i+1]; ints[2*i]=x; ints[2*i+1]=y;
-    out[2*i]=(x/Q-LON0)*KX; out[2*i+1]=-(y/Q-LAT0)*KY; }
-  return {p:out, ints};
+  const ll=[], ints=[]; let x=0,y=0;
+  for(let i=0;i<a.length;i+=2){ x+=a[i]; y+=a[i+1]; ints.push(x,y); ll.push([x/Q,y/Q]); }
+  return {ll, ints};
 }
-const proj = (lon,lat) => [(lon-LON0)*KX, -(lat-LAT0)*KY];
-const unproj = (x,y) => [x/KX+LON0, -y/KY+LAT0];
+const toM = (lon,lat) => [(lon-LON0)*KX, -(lat-LAT0)*KY];
+const roads = D.roads.map(([c,name,ref,fl,g]) => { const d=dec(g); return {c,name,ref,oneway:fl&1,bridge:(fl&2)?1:0,ll:d.ll,ints:d.ints}; });
+const pois = D.pois.map(([cat,name,x,y,addr,phone,hours],i) => ({i,cat,name,lon:x/Q,lat:y/Q,addr,phone,hours}));
 
-function pathOf(p, close){
-  const P = new Path2D(); P.moveTo(p[0],p[1]);
-  for(let i=2;i<p.length;i+=2) P.lineTo(p[i],p[i+1]);
-  if(close) P.closePath(); return P;
-}
-const roads = D.roads.map(([c,name,ref,fl,g]) => { const d = dec(g); return {c,name,ref,oneway:fl&1,bridge:fl&2,p:d.p,ints:d.ints}; });
-const classPaths = Array.from({length:7}, () => new Path2D());
-const bridgePaths = Array.from({length:7}, () => new Path2D());
-for(const r of roads){ (r.bridge?bridgePaths:classPaths)[r.c].addPath(pathOf(r.p)); }
-const waterPath = new Path2D(); D.water.forEach(([n,g]) => waterPath.addPath(pathOf(dec(g).p, true)));
-const parkPath = new Path2D(); D.parks.forEach(([n,g]) => parkPath.addPath(pathOf(dec(g).p, true)));
-const riverPaths = [new Path2D(), new Path2D()]; D.rivers.forEach(([big,n,g]) => riverPaths[big].addPath(pathOf(dec(g).p)));
-const railPath = new Path2D(); D.rail.forEach(g => railPath.addPath(pathOf(dec(g).p)));
-const pois = D.pois.map(([cat,name,x,y,addr,phone,hours],i) => {
-  const lon=x/Q, lat=y/Q, [px,py]=proj(lon,lat); return {i,cat,name,lon,lat,x:px,y:py,addr,phone,hours};
+const fc = feats => ({type:'FeatureCollection', features:feats});
+const line = (coords, props) => ({type:'Feature', properties:props||{}, geometry:{type:'LineString', coordinates:coords}});
+const poly = (ring, props) => { if(ring.length && (ring[0][0]!==ring[ring.length-1][0]||ring[0][1]!==ring[ring.length-1][1])) ring=ring.concat([ring[0]]);
+  return {type:'Feature', properties:props||{}, geometry:{type:'Polygon', coordinates:[ring]}}; };
+
+const roadsGJ = fc(roads.map(r => line(r.ll, {c:r.c, b:r.bridge, o:r.oneway})));
+const waterGJ = fc(D.water.map(([n,g]) => poly(dec(g).ll)));
+const riverGJ = fc(D.rivers.map(([big,n,g]) => line(dec(g).ll, {big})));
+const railGJ  = fc(D.rail.map(g => line(dec(g).ll)));
+const parkGJ  = fc(D.parks.map(([n,g]) => poly(dec(g).ll)));
+const bldGJ   = fc((D.bld||[]).map(([h,est,g]) => poly(dec(g).ll, {h})));
+
+/* ---------- map ---------- */
+const ZS = [[12,0.12],[15,0.9],[18,7.2]];
+const lw = (w) => ['interpolate',['exponential',2],['zoom'], ...ZS.flatMap(([z,k])=>[z, w*k])];
+const lwBy = (f) => ['interpolate',['exponential',2],['zoom'], ...ZS.flatMap(([z,k])=>[z, f(k)])];
+const byClass = (vals) => ['match',['get','c'],0,vals[0],1,vals[1],2,vals[2],3,vals[3],4,vals[4],5,vals[5],vals[6]];
+const map = new maplibregl.Map({
+  container:'map', attributionControl:false, maxPitch:70, minZoom:11.5, maxZoom:19.5,
+  center:[105.9135,20.5445], zoom:14.6, pitch:55, bearing:-18,
+  maxBounds:[[105.80,20.44],[106.03,20.65]],
+  style:{version:8, sources:{}, layers:[{id:'bg', type:'background', paint:{'background-color':'#0e1422'}}]},
+});
+map.on('load', () => {
+  map.addSource('park',{type:'geojson',data:parkGJ});
+  map.addSource('water',{type:'geojson',data:waterGJ});
+  map.addSource('river',{type:'geojson',data:riverGJ});
+  map.addSource('rail',{type:'geojson',data:railGJ});
+  map.addSource('roads',{type:'geojson',data:roadsGJ});
+  map.addSource('bld',{type:'geojson',data:bldGJ});
+  map.addSource('route',{type:'geojson',data:fc([])});
+  map.addSource('hl',{type:'geojson',data:fc([])});
+  map.addLayer({id:'park',type:'fill',source:'park',paint:{'fill-color':'#13261f'}});
+  map.addLayer({id:'water',type:'fill',source:'water',paint:{'fill-color':'#1a3657'}});
+  map.addLayer({id:'river',type:'line',source:'river',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#1a3657','line-width':lwBy(k=>['case',['==',['get','big'],1], 60*k, 10*k])}});
+  map.addLayer({id:'rail',type:'line',source:'rail',paint:{'line-color':'#59627a','line-width':['interpolate',['linear'],['zoom'],12,1,17,3]}});
+  map.addLayer({id:'rail-tie',type:'line',source:'rail',paint:{'line-color':'#0e1422','line-width':['interpolate',['linear'],['zoom'],12,.4,17,1.4],'line-dasharray':[2,2]}});
+  const W = [26,24,20,16,12,8,6];
+  for(const b of [0,1]){
+    const f = ['==',['get','b'],b];
+    map.addLayer({id:'case'+b,type:'line',source:'roads',filter:f,layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color':byClass(['#aab3c5','#aab3c5','#98a1b4','#7d879c','#6b7489','#4c5568','#454d5f']),'line-width':lwBy(k=>byClass(W.map(w=>w*1.14*k+1.2)))}});
+    map.addLayer({id:'road'+b,type:'line',source:'roads',filter:f,layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color':byClass(['#4d5567','#4d5567','#465063','#414a5c','#3b4355','#323a4b','#2e3545']),'line-width':lwBy(k=>byClass(W.map(w=>w*k)))}});
+    // centre markings: solid yellow on trunk/primary, dashed white on secondary/tertiary/residential
+    map.addLayer({id:'cl-y'+b,type:'line',source:'roads',filter:['all',f,['<=',['get','c'],2],['==',['get','o'],0]],minzoom:14.5,
+      paint:{'line-color':'#f2c94c','line-width':['interpolate',['linear'],['zoom'],14.5,.6,18,2.2]}});
+    map.addLayer({id:'cl-w'+b,type:'line',source:'roads',filter:['all',f,['>=',['get','c'],3],['<=',['get','c'],5]],minzoom:15.5,
+      paint:{'line-color':'#d7dce6','line-opacity':.75,'line-width':['interpolate',['linear'],['zoom'],15.5,.5,18,1.6],'line-dasharray':[3,3]}});
+    map.addLayer({id:'ln-w'+b,type:'line',source:'roads',filter:['all',f,['<=',['get','c'],2]],minzoom:16,
+      paint:{'line-color':'#d7dce6','line-opacity':.55,'line-width':1,'line-dasharray':[4,4],'line-offset':['interpolate',['exponential',2],['zoom'],16,5,18,20]}});
+  }
+  map.addLayer({id:'hl',type:'line',source:'hl',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#2bc59a','line-opacity':.55,'line-width':['interpolate',['linear'],['zoom'],12,5,18,22]}});
+  map.addLayer({id:'route-glow',type:'line',source:'route',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#2bc59a','line-opacity':.25,'line-width':['interpolate',['linear'],['zoom'],12,10,18,34],'line-blur':4}});
+  map.addLayer({id:'route',type:'line',source:'route',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#22d3a0','line-width':['interpolate',['linear'],['zoom'],12,4,18,14]}});
+  map.addLayer({id:'bld',type:'fill-extrusion',source:'bld',minzoom:13.5,paint:{
+    'fill-extrusion-color':['interpolate',['linear'],['get','h'],3,'#2a3346',12,'#34405a',30,'#45526f'],
+    'fill-extrusion-height':['get','h'],'fill-extrusion-base':0,
+    'fill-extrusion-opacity':['interpolate',['linear'],['zoom'],13.5,0,14.5,.92]}});
+  map.setLight({anchor:'viewport',color:'#ffffff',intensity:.35,position:[1.2,210,40]});
+  $('loading').remove(); drawOverlay();
 });
 
-/* ---------- label candidates: longest straight run per named road ---------- */
-const labelCands = [];
+/* ---------- overlay: road names, POI icons, pins ---------- */
+const ov=$('ov'), ctx=ov.getContext('2d'); let DPR=1, OW=0, OH=0;
+function sizeOv(){ DPR=Math.min(devicePixelRatio||1,2.5); OW=ov.clientWidth; OH=ov.clientHeight; ov.width=Math.round(OW*DPR); ov.height=Math.round(OH*DPR); }
+const FONT='"Be Vietnam Pro", "Segoe UI", Roboto, Arial, sans-serif';
+const MINZ=[12.3,12.3,12.8,13.8,14.8,15.8,16.8];
+const labelCands=[];
 for(const r of roads){
-  if(!r.name) continue;
-  let best=-1, bl=0;
-  for(let i=0;i<r.p.length-2;i+=2){ const l=Math.hypot(r.p[i+2]-r.p[i], r.p[i+3]-r.p[i+1]); if(l>bl){bl=l;best=i;} }
-  if(best<0) continue;
-  labelCands.push({c:r.c, name:r.name, len:bl, x:(r.p[best]+r.p[best+2])/2, y:(r.p[best+1]+r.p[best+3])/2,
-    a:Math.atan2(r.p[best+3]-r.p[best+1], r.p[best+2]-r.p[best])});
+  if(!r.name||r.ll.length<2) continue;
+  // longest run of nearly-straight consecutive segments → label along its chord
+  const m=r.ll.map(p=>toM(p[0],p[1]));
+  let bs=0,be=1,bl=0, rs=0, rl=0, prevAng=null;
+  for(let i=0;i<m.length-1;i++){
+    const dx=m[i+1][0]-m[i][0], dy=m[i+1][1]-m[i][1], l=Math.hypot(dx,dy), ang=Math.atan2(dy,dx);
+    if(prevAng!==null){ let d=Math.abs(ang-prevAng); if(d>Math.PI) d=2*Math.PI-d; if(d>0.35){ rs=i; rl=0; } }
+    rl+=l; prevAng=ang;
+    const chord=Math.hypot(m[i+1][0]-m[rs][0], m[i+1][1]-m[rs][1]);
+    if(chord>bl){ bl=chord; bs=rs; be=i+1; }
+  }
+  if(bl<30) continue;
+  labelCands.push({c:r.c,name:r.name,len:bl,a:r.ll[bs],b:r.ll[be]});
 }
-labelCands.sort((a,b)=>a.c-b.c || b.len-a.len);
-const waterLabels = [];
-D.rivers.forEach(([big,n,g])=>{ if(!n||!big) return; const p=dec(g).p; const m=Math.floor(p.length/4)*2; if(p.length>=4) waterLabels.push({name:n,x:p[m],y:p[m+1],a:Math.atan2(p[m+3]-p[m+1],p[m+2]-p[m])}); });
-D.water.forEach(([n,g])=>{ if(!n) return; const p=dec(g).p; let sx=0,sy=0; for(let i=0;i<p.length;i+=2){sx+=p[i];sy+=p[i+1];} waterLabels.push({name:n,x:sx/(p.length/2),y:sy/(p.length/2),a:0,area:true}); });
+labelCands.sort((a,b)=>a.c-b.c||b.len-a.len);
+const waterLabels=[]; D.rivers.forEach(([big,n,g])=>{ if(n&&big){ const ll=dec(g).ll; const m=Math.floor(ll.length/2); if(ll.length>2) waterLabels.push({name:n,a:ll[m-1],b:ll[m]}); }});
+D.water.forEach(([n,g])=>{ if(!n) return; const ll=dec(g).ll; let sx=0,sy=0; ll.forEach(p=>{sx+=p[0];sy+=p[1];}); waterLabels.push({name:n,pt:[sx/ll.length,sy/ll.length]}); });
+
+let filter=new Set(Object.keys(CATS)), selected=null, route=null, A=null, B=null, picking=null, car=null;
+let poiHits=[];
+function overlaps(b,boxes){ for(const o of boxes) if(b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1]) return true; return false; }
+function drawOverlay(){
+  if(!OW) sizeOv();
+  ctx.setTransform(DPR,0,0,DPR,0,0); ctx.clearRect(0,0,OW,OH);
+  const z=map.getZoom(), boxes=[], used=new Set(), horizon = OH*0.08;
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineJoin='round';
+  // water names
+  ctx.font='italic 500 12.5px '+FONT;
+  for(const w of waterLabels){ if(z<13||used.has(w.name)) continue;
+    let p, ang=0; if(w.pt){ p=map.project(w.pt); } else { const a=map.project(w.a), b=map.project(w.b); p={x:(a.x+b.x)/2,y:(a.y+b.y)/2}; ang=Math.atan2(b.y-a.y,b.x-a.x); if(ang>Math.PI/2)ang-=Math.PI; if(ang<-Math.PI/2)ang+=Math.PI; }
+    if(p.x<0||p.y<horizon||p.x>OW||p.y>OH) continue; const tw=ctx.measureText(w.name).width; const bx=[p.x-tw/2-4,p.y-10,p.x+tw/2+4,p.y+10]; if(overlaps(bx,boxes)) continue;
+    boxes.push(bx); used.add(w.name); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(ang); ctx.fillStyle='#6f9bd1'; ctx.fillText(w.name,0,0); ctx.restore(); }
+  // road names along the road
+  let n=0;
+  for(const L of labelCands){
+    if(z<MINZ[L.c]||used.has(L.name)||n>70) continue;
+    const a=map.project(L.a), b=map.project(L.b); const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+    if(mx<-40||my<horizon||mx>OW+40||my>OH+20) continue;
+    const size=L.c<=2?12.5:L.c<=4?11.5:10.5; ctx.font='italic 500 '+size+'px '+FONT;
+    const tw=ctx.measureText(L.name).width; const segLen=Math.hypot(b.x-a.x,b.y-a.y); if(segLen<tw+10) continue;
+    let ang=Math.atan2(b.y-a.y,b.x-a.x); if(ang>Math.PI/2)ang-=Math.PI; if(ang<-Math.PI/2)ang+=Math.PI;
+    const hw=Math.abs(Math.cos(ang))*tw/2+Math.abs(Math.sin(ang))*7, hh=Math.abs(Math.sin(ang))*tw/2+Math.abs(Math.cos(ang))*7;
+    const bx=[mx-hw-2,my-hh-2,mx+hw+2,my+hh+2]; if(overlaps(bx,boxes)) continue;
+    boxes.push(bx); used.add(L.name); n++;
+    ctx.save(); ctx.translate(mx,my); ctx.rotate(ang); ctx.strokeStyle='rgba(14,20,34,.9)'; ctx.lineWidth=3.5; ctx.strokeText(L.name,0,0); ctx.fillStyle='#dfe5ee'; ctx.fillText(L.name,0,0); ctx.restore();
+  }
+  // POIs
+  poiHits=[];
+  const big = z>=14.2, r = big?13:5;
+  const order = pois.filter(p=>filter.has(p.cat) && p!==selected).map(p=>({p, s:map.project([p.lon,p.lat])})).filter(o=>o.s.x>-20&&o.s.y>horizon&&o.s.x<OW+20&&o.s.y<OH+20).sort((a,b)=>a.s.y-b.s.y);
+  for(const {p,s} of order){
+    const ib=[s.x-r,s.y-r,s.x+r,s.y+r];
+    if(big && overlaps(ib,boxes)) continue;
+    boxes.push(ib); poiHits.push({p,x:s.x,y:s.y,r:Math.max(r,12)});
+    marker(s.x,s.y,p.cat,r,big);
+    if(z>=15.3){ ctx.font='600 11.5px '+FONT; const tw=ctx.measureText(p.name).width; const lb=[s.x-tw/2-2,s.y+r+2,s.x+tw/2+2,s.y+r+17];
+      if(!overlaps(lb,boxes)){ boxes.push(lb); ctx.textAlign='center'; ctx.strokeStyle='rgba(14,20,34,.92)'; ctx.lineWidth=3.5; ctx.strokeText(p.name,s.x,s.y+r+10); ctx.fillStyle='#f1f4f9'; ctx.fillText(p.name,s.x,s.y+r+10); } }
+  }
+  if(selected){ const s=map.project([selected.lon,selected.lat]); pin(s.x,s.y,CATS[selected.cat].color,selected.cat); poiHits.push({p:selected,x:s.x,y:s.y-22,r:16});
+    ctx.font='700 13px '+FONT; ctx.textAlign='center'; ctx.strokeStyle='rgba(14,20,34,.95)'; ctx.lineWidth=4; ctx.strokeText(selected.name,s.x,s.y+14); ctx.fillStyle='#fff'; ctx.fillText(selected.name,s.x,s.y+14); }
+  [[A,'#4dabf7','A'],[B,'#f06595','B']].forEach(([p,col,t])=>{ if(!p) return; const s=map.project([p.lon,p.lat]); pin(s.x,s.y,col,null,t); });
+  if(car){ const s=map.project(car); ctx.save(); ctx.translate(s.x,s.y);
+    ctx.beginPath(); ctx.ellipse(0,0,22,11,0,0,7); ctx.strokeStyle='rgba(77,171,247,.9)'; ctx.lineWidth=2; ctx.stroke(); ctx.fillStyle='rgba(77,171,247,.18)'; ctx.fill();
+    ctx.fillStyle='#fff'; ctx.strokeStyle='#0e1422'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.roundRect(-6,-11,12,20,3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#3a4560'; ctx.fillRect(-4.5,-8,9,4); ctx.restore(); }
+  updateScale();
+}
+function marker(x,y,cat,r,big){
+  ctx.save(); ctx.translate(x,y);
+  ctx.shadowColor='rgba(0,0,0,.45)'; ctx.shadowBlur=6; ctx.shadowOffsetY=2;
+  ctx.beginPath(); ctx.arc(0,0,r,0,7); ctx.fillStyle=big?'#ffffff':CATS[cat].color; ctx.fill();
+  ctx.shadowColor='transparent';
+  if(big){ const k=(r*1.25)/24; ctx.translate(-12*k,-12*k); ctx.scale(k,k); ctx.fillStyle=CATS[cat].color; ctx.fill(ICON[cat],'evenodd'); }
+  else { ctx.lineWidth=1.5; ctx.strokeStyle='#fff'; ctx.stroke(); }
+  ctx.restore();
+}
+function pin(x,y,col,cat,txt){
+  ctx.save(); ctx.translate(x,y); ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=8; ctx.shadowOffsetY=3;
+  ctx.fillStyle=col; ctx.beginPath(); ctx.moveTo(0,0); ctx.bezierCurveTo(-5,-9,-15,-14,-15,-25); ctx.arc(0,-25,15,Math.PI,0); ctx.bezierCurveTo(15,-14,5,-9,0,0); ctx.closePath(); ctx.fill();
+  ctx.shadowColor='transparent'; ctx.beginPath(); ctx.arc(0,-25,10.5,0,7); ctx.fillStyle='#fff'; ctx.fill();
+  if(cat){ const k=15/24; ctx.translate(-12*k,-25-12*k); ctx.scale(k,k); ctx.fillStyle=col; ctx.fill(ICON[cat],'evenodd'); }
+  else { ctx.fillStyle=col; ctx.font='700 12px '+FONT; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(txt,0,-24.5); }
+  ctx.restore();
+}
+function updateScale(){
+  const c=map.getCenter(); const a=map.project(c); const ll=map.unproject([a.x+100,a.y]);
+  const mPer100 = Math.hypot((ll.lng-c.lng)*KX,(ll.lat-c.lat)*KY); const mpp=mPer100/100;
+  const target=100*mpp, pow=10**Math.floor(Math.log10(target)); let v=pow; for(const m of [1,2,5]) if(m*pow<=target) v=m*pow;
+  $('scale').querySelector('span').textContent = v>=1000?(v/1000)+' km':v+' m'; $('scale').querySelector('div').style.width=(v/mpp)+'px';
+}
+map.on('render', drawOverlay);
+map.on('rotate', ()=>{ $('compass').firstElementChild.style.transform=`rotate(${-map.getBearing()}deg)`; });
+map.on('pitchend', ()=>{ $('dim').textContent = map.getPitch()>5?'2D':'3D'; });
+new ResizeObserver(()=>{ sizeOv(); map.resize(); drawOverlay(); }).observe($('wrap'));
+document.fonts && document.fonts.ready.then(()=>map.triggerRepaint());
+
+/* ---------- controls ---------- */
+$('compass').onclick=()=>map.easeTo({bearing:0});
+$('dim').onclick=()=>{ const flat=map.getPitch()>5; map.easeTo(flat?{pitch:0,bearing:0}:{pitch:58,bearing:-18}); $('dim').textContent=flat?'3D':'2D'; };
+$('zin').onclick=()=>map.zoomIn(); $('zout').onclick=()=>map.zoomOut();
+$('home').onclick=()=>map.flyTo({center:[105.9135,20.5445],zoom:14.6,pitch:55,bearing:-18});
 
 /* ---------- routing graph ---------- */
-const nodeIdx = new Map(), NX=[], NY=[], adj=[];
-function nid(ix,iy,x,y){ const k=ix*1e7+iy; let id=nodeIdx.get(k); if(id===undefined){ id=NX.length; nodeIdx.set(k,id); NX.push(x); NY.push(y); adj.push([]);} return id; }
-roads.forEach((r,ri)=>{
-  const sp = SPEED[r.c]/3.6;
-  let prev = nid(r.ints[0],r.ints[1],r.p[0],r.p[1]);
-  for(let i=2;i<r.p.length;i+=2){
-    const cur = nid(r.ints[i],r.ints[i+1],r.p[i],r.p[i+1]);
-    const len = Math.hypot(r.p[i]-r.p[i-2], r.p[i+1]-r.p[i-1]);
-    adj[prev].push(cur, len, len/sp, ri);
-    if(!r.oneway) adj[cur].push(prev, len, len/sp, ri);
-    prev = cur;
-  }
-});
-function nearestNode(x,y){ let b=-1,bd=Infinity; for(let i=0;i<NX.length;i++){ if(!adj[i].length) continue; const d=(NX[i]-x)**2+(NY[i]-y)**2; if(d<bd){bd=d;b=i;} } return b; }
+const nodeIdx=new Map(), NLL=[], NX=[], NY=[], adj=[];
+function nid(ix,iy,ll){ const k=ix*1e7+iy; let id=nodeIdx.get(k); if(id===undefined){ id=NLL.length; nodeIdx.set(k,id); NLL.push(ll); const m=toM(ll[0],ll[1]); NX.push(m[0]); NY.push(m[1]); adj.push([]);} return id; }
+roads.forEach((r,ri)=>{ const sp=SPEED[r.c]/3.6; let prev=nid(r.ints[0],r.ints[1],r.ll[0]);
+  for(let i=1;i<r.ll.length;i++){ const cur=nid(r.ints[2*i],r.ints[2*i+1],r.ll[i]); const len=Math.hypot(NX[cur]-NX[prev],NY[cur]-NY[prev]);
+    adj[prev].push(cur,len,len/sp,ri); if(!r.oneway) adj[cur].push(prev,len,len/sp,ri); prev=cur; } });
+function nearestNode(lon,lat){ const [x,y]=toM(lon,lat); let b=-1,bd=Infinity; for(let i=0;i<NX.length;i++){ if(!adj[i].length) continue; const d=(NX[i]-x)**2+(NY[i]-y)**2; if(d<bd){bd=d;b=i;} } return b; }
 function dijkstra(s,t){
   const n=NX.length, dist=new Float64Array(n).fill(Infinity), prev=new Int32Array(n).fill(-1), via=new Int32Array(n).fill(-1), vlen=new Float64Array(n);
   const H=[]; const push=(d,v)=>{H.push([d,v]); let i=H.length-1; while(i>0){const p=(i-1)>>1; if(H[p][0]<=H[i][0])break; [H[p],H[i]]=[H[i],H[p]]; i=p;}};
@@ -240,259 +390,139 @@ function dijkstra(s,t){
   while(H.length){ const [d,u]=pop(); if(u===t) break; if(d>dist[u]) continue; const a=adj[u];
     for(let k=0;k<a.length;k+=4){ const v=a[k], nd=d+a[k+2]; if(nd<dist[v]){dist[v]=nd; prev[v]=u; via[v]=a[k+3]; vlen[v]=a[k+1]; push(nd,v);} } }
   if(!isFinite(dist[t])) return null;
-  const nodes=[], steps=[]; let len=0;
-  for(let v=t; v!==-1; v=prev[v]){ nodes.push(v); if(prev[v]!==-1){ len+=vlen[v]; const r=roads[via[v]]; const nm=r.name||'Đường không tên'; if(steps.length&&steps[steps.length-1].name===nm) steps[steps.length-1].len+=vlen[v]; else steps.push({name:nm,len:vlen[v]}); } }
-  nodes.reverse(); steps.reverse();
-  return {nodes, len, time:dist[t], steps};
+  const nodes=[], steps=[], segRoad=[]; let len=0;
+  for(let v=t; v!==-1; v=prev[v]){ nodes.push(v); if(prev[v]!==-1){ len+=vlen[v]; const nm=roads[via[v]].name||'Đường không tên'; segRoad.push(nm);
+    if(steps.length&&steps[steps.length-1].name===nm) steps[steps.length-1].len+=vlen[v]; else steps.push({name:nm,len:vlen[v]}); } }
+  nodes.reverse(); steps.reverse(); segRoad.reverse();
+  return {nodes, len, time:dist[t], steps, segRoad};
 }
 
-/* ---------- view state ---------- */
-const view = {cx:0, cy:0, s:0.1};
-let W=0,H=0,DPR=1;
-function resize(){ DPR=Math.min(window.devicePixelRatio||1,2.5); W=wrap.clientWidth; H=wrap.clientHeight; cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR); draw(); }
-function home(){ view.cx=0; view.cy=200; view.s=Math.min(W,H)/5200; draw(); }
-const S2W = (sx,sy) => [(sx-W/2)/view.s+view.cx, (sy-H/2)/view.s+view.cy];
-const W2S = (x,y) => [(x-view.cx)*view.s+W/2, (y-view.cy)*view.s+H/2];
-function zoomAt(f, sx, sy){ const [wx,wy]=S2W(sx,sy); view.s=Math.max(0.012,Math.min(view.s*f,12)); view.cx=wx-(sx-W/2)/view.s; view.cy=wy-(sy-H/2)/view.s; draw(); }
+/* ---------- taps ---------- */
+map.on('click', e=>{
+  if(picking){ const {lng,lat}=e.lngLat; setEnd(picking,{lon:lng,lat,name:placeName(lng,lat)}); picking=null; $('wrap').classList.remove('picking-on'); hideToast(); return; }
+  let best=null,bd=Infinity; for(const h of poiHits){ const d=Math.hypot(h.x-e.point.x,h.y-e.point.y); if(d<h.r+4&&d<bd){bd=d;best=h.p;} }
+  if(best) select(best,false); else { selected=null; renderSel(); map.triggerRepaint(); }
+});
+function placeName(lon,lat){ const n=nearestNode(lon,lat); for(let k=0;k<adj[n].length;k+=4){ const r=roads[adj[n][k+3]]; if(r.name) return 'Gần '+r.name; } return 'Điểm trên bản đồ'; }
 
-let theme = {};
-function readTheme(){ const cs=getComputedStyle(document.documentElement); for(const k of ['land','park','water','water-ink','road','road-case','major','major-case','trunk','trunk-case','rail','label','halo','accent','route-case','start','end']) theme[k]=cs.getPropertyValue('--'+k).trim(); }
-
-/* ---------- state ---------- */
-let filter = new Set(Object.keys(CATS)), selected = null, highlightRoad = null;
-let route = null, A = null, B = null, picking = null;
-
-/* ---------- draw ---------- */
-let raf = 0;
-function draw(){ if(!raf) raf=requestAnimationFrame(render); }
-function render(){
-  raf=0; if(!W) return;
-  const s=view.s;
-  ctx.setTransform(DPR,0,0,DPR,0,0);
-  ctx.fillStyle=theme.land; ctx.fillRect(0,0,W,H);
-  ctx.setTransform(DPR*s,0,0,DPR*s,DPR*(W/2-view.cx*s),DPR*(H/2-view.cy*s));
-  ctx.lineCap='round'; ctx.lineJoin='round';
-  ctx.fillStyle=theme.park; ctx.fill(parkPath);
-  ctx.fillStyle=theme.water; ctx.fill(waterPath,'evenodd');
-  ctx.strokeStyle=theme.water;
-  ctx.lineWidth=Math.max(3/s,55); ctx.stroke(riverPaths[1]);
-  ctx.lineWidth=Math.max(1.4/s,10); ctx.stroke(riverPaths[0]);
-  // rail
-  ctx.strokeStyle=theme.rail; ctx.lineWidth=3/s; ctx.setLineDash([]); ctx.stroke(railPath);
-  ctx.strokeStyle=theme.land; ctx.lineWidth=1.6/s; ctx.setLineDash([6/s,6/s]); ctx.stroke(railPath); ctx.setLineDash([]);
-  // roads: casings then fills, minor first
-  const fillOf = c => c<=1?theme.trunk : c<=3?theme.major : theme.road;
-  const caseOf = c => c<=1?theme['trunk-case'] : c<=3?theme['major-case'] : theme['road-case'];
-  const pass = (paths) => {
-    for(let c=6;c>=0;c--){ if(s<SHOW[c]) continue; const w=Math.max(MINPX[c]/s, WIDTH[c]);
-      ctx.strokeStyle=caseOf(c); ctx.lineWidth=w+Math.max(1.6/s, w*.22); ctx.stroke(paths[c]); }
-    for(let c=6;c>=0;c--){ if(s<SHOW[c]) continue; const w=Math.max(MINPX[c]/s, WIDTH[c]);
-      ctx.strokeStyle=fillOf(c); ctx.lineWidth=w; ctx.stroke(paths[c]); }
-  };
-  pass(classPaths); pass(bridgePaths);
-  if(highlightRoad){ ctx.strokeStyle=theme.accent; ctx.globalAlpha=.55; ctx.lineWidth=Math.max(7/s,30); ctx.stroke(highlightRoad.path); ctx.globalAlpha=1; }
-  // route
-  if(route){
-    const P=new Path2D(); route.nodes.forEach((n,i)=> i?P.lineTo(NX[n],NY[n]):P.moveTo(NX[n],NY[n]));
-    ctx.strokeStyle=theme['route-case']; ctx.lineWidth=9/s; ctx.stroke(P);
-    ctx.strokeStyle=theme.accent; ctx.lineWidth=6/s; ctx.stroke(P);
-  }
-  ctx.setTransform(DPR,0,0,DPR,0,0);
-  drawLabels();
-  drawPois();
-  [[A,theme.start,'A'],[B,theme.end,'B']].forEach(([p,col,t])=>{ if(!p) return; const [x,y]=W2S(p.x,p.y); pin(x,y,col,t); });
-  updateScale();
-}
-function pin(x,y,col,t){
-  ctx.save(); ctx.translate(x,y);
-  ctx.fillStyle=col; ctx.strokeStyle='#fff'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(0,0); ctx.bezierCurveTo(-4,-8,-11,-12,-11,-20); ctx.arc(0,-20,11,Math.PI,0); ctx.bezierCurveTo(11,-12,4,-8,0,0); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle='#fff'; ctx.font='700 11px '+getFont(); ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(t,0,-20);
-  ctx.restore();
-}
-let fontName='"Be Vietnam Pro", "Segoe UI", Roboto, Arial, sans-serif';
-const getFont=()=>fontName;
-function drawLabels(){
-  const s=view.s, boxes=[], used=new Set();
-  const hit=(b)=>{ for(const o of boxes) if(b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1]) return true; return false; };
-  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineJoin='round';
-  // water names
-  ctx.font='italic 500 12px '+getFont();
-  for(const w of waterLabels){ if(s<0.05 || used.has(w.name)) continue; const [x,y]=W2S(w.x,w.y); if(x<0||y<0||x>W||y>H) continue;
-    let a=w.a; if(a>Math.PI/2)a-=Math.PI; if(a<-Math.PI/2)a+=Math.PI;
-    const tw=ctx.measureText(w.name).width, r=tw/2+4; const b=[x-r,y-r*Math.abs(Math.sin(a))-8,x+r,y+r*Math.abs(Math.sin(a))+8]; if(hit(b)) continue;
-    boxes.push(b); used.add(w.name); ctx.save(); ctx.translate(x,y); ctx.rotate(a); ctx.fillStyle=theme['water-ink']; ctx.fillText(w.name,0,0); ctx.restore(); }
-  let count=0;
-  for(const L of labelCands){
-    if(s<SHOW[L.c]*1.6 || used.has(L.name) || count>90) continue;
-    const [x,y]=W2S(L.x,L.y); if(x<-50||y<-20||x>W+50||y>H+20) continue;
-    const size = L.c<=2?12.5:L.c<=4?11.5:10.5;
-    ctx.font=(L.c<=3?'600 ':'500 ')+size+'px '+getFont();
-    const tw=ctx.measureText(L.name).width;
-    if(L.len*s < tw+6) continue;
-    let a=L.a; if(a>Math.PI/2)a-=Math.PI; if(a<-Math.PI/2)a+=Math.PI;
-    const hw=Math.abs(Math.cos(a))*tw/2+Math.abs(Math.sin(a))*7, hh=Math.abs(Math.sin(a))*tw/2+Math.abs(Math.cos(a))*7;
-    const b=[x-hw-2,y-hh-2,x+hw+2,y+hh+2]; if(hit(b)) continue;
-    boxes.push(b); used.add(L.name); count++;
-    ctx.save(); ctx.translate(x,y); ctx.rotate(a);
-    ctx.strokeStyle=theme.halo; ctx.lineWidth=3.5; ctx.strokeText(L.name,0,0.5);
-    ctx.fillStyle=theme.label; ctx.fillText(L.name,0,0.5); ctx.restore();
-  }
-  labelBoxes=boxes;
-}
-let labelBoxes=[];
-function poiVisible(p){ return filter.has(p.cat); }
-function drawPois(){
-  const s=view.s; const showLabel = s>0.35; const rad = s>0.2?8:s>0.08?5.5:3.5;
-  ctx.textAlign='left'; ctx.textBaseline='middle';
-  const boxes=labelBoxes.slice();
-  for(const p of pois){
-    if(!poiVisible(p) || p===selected) continue;
-    const [x,y]=W2S(p.x,p.y); if(x<-10||y<-10||x>W+10||y>H+10) continue;
-    ctx.beginPath(); ctx.arc(x,y,rad,0,7); ctx.fillStyle=CATS[p.cat].color; ctx.fill(); ctx.lineWidth=1.6; ctx.strokeStyle='#fff'; ctx.stroke();
-    if(rad>=8){ ctx.fillStyle='#fff'; ctx.font='700 8px '+getFont(); ctx.textAlign='center'; ctx.fillText(CATS[p.cat].ch,x,y+.5); ctx.textAlign='left'; }
-    if(showLabel){ ctx.font='500 11.5px '+getFont(); const tw=ctx.measureText(p.name).width; const b=[x+rad+3,y-8,x+rad+5+tw,y+8];
-      let clash=false; for(const o of boxes) if(b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1]){clash=true;break;}
-      if(!clash){ boxes.push(b); ctx.strokeStyle=theme.halo; ctx.lineWidth=3; ctx.strokeText(p.name,x+rad+4,y); ctx.fillStyle=theme.label; ctx.fillText(p.name,x+rad+4,y); } }
-  }
-  if(selected){ const [x,y]=W2S(selected.x,selected.y); pin(x,y,CATS[selected.cat].color,CATS[selected.cat].ch);
-    ctx.font='600 13px '+getFont(); ctx.textAlign='center'; ctx.strokeStyle=theme.halo; ctx.lineWidth=3.5; ctx.strokeText(selected.name,x,y+14); ctx.fillStyle=theme.label; ctx.fillText(selected.name,x,y+14); }
-}
-function updateScale(){
-  const target=110/view.s; const pow=10**Math.floor(Math.log10(target)); let v=pow; for(const m of [1,2,5]) if(m*pow<=target) v=m*pow;
-  const el=$('scale'); el.querySelector('span').textContent = v>=1000? (v/1000)+' km' : v+' m'; el.querySelector('div').style.width=(v*view.s)+'px';
-}
-
-/* ---------- interaction ---------- */
-const pts=new Map(); let moved=false, last=null, pinch=null;
-cv.addEventListener('pointerdown',e=>{ cv.setPointerCapture(e.pointerId); pts.set(e.pointerId,[e.offsetX,e.offsetY]); moved=false; last=[e.offsetX,e.offsetY];
-  if(pts.size===2){ const [a,b]=[...pts.values()]; pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1]), m:[(a[0]+b[0])/2,(a[1]+b[1])/2]}; } });
-cv.addEventListener('pointermove',e=>{ if(!pts.has(e.pointerId)) return; pts.set(e.pointerId,[e.offsetX,e.offsetY]);
-  if(pts.size===2&&pinch){ const [a,b]=[...pts.values()]; const d=Math.hypot(a[0]-b[0],a[1]-b[1]), m=[(a[0]+b[0])/2,(a[1]+b[1])/2];
-    view.cx-=(m[0]-pinch.m[0])/view.s; view.cy-=(m[1]-pinch.m[1])/view.s; zoomAt(d/pinch.d,m[0],m[1]); pinch={d,m}; moved=true; return; }
-  const dx=e.offsetX-last[0], dy=e.offsetY-last[1]; if(Math.abs(dx)+Math.abs(dy)>3||moved){ moved=true; cv.classList.add('drag'); view.cx-=dx/view.s; view.cy-=dy/view.s; last=[e.offsetX,e.offsetY]; draw(); } });
-const up=e=>{ pts.delete(e.pointerId); if(pts.size<2) pinch=null; cv.classList.remove('drag'); if(pts.size===1){ last=[...pts.values()][0]; } };
-cv.addEventListener('pointerup',e=>{ const wasMove=moved; up(e); if(!wasMove && pts.size===0) onTap(e.offsetX,e.offsetY); });
-cv.addEventListener('pointercancel',up);
-cv.addEventListener('wheel',e=>{ e.preventDefault(); zoomAt(Math.exp(-e.deltaY*(e.deltaMode?0.05:0.0016)), e.offsetX, e.offsetY); },{passive:false});
-cv.addEventListener('dblclick',e=>zoomAt(2,e.offsetX,e.offsetY));
-$('zin').onclick=()=>zoomAt(1.6,W/2,H/2); $('zout').onclick=()=>zoomAt(1/1.6,W/2,H/2); $('home').onclick=home;
-
-function onTap(sx,sy){
-  const [wx,wy]=S2W(sx,sy);
-  if(picking){ const p={x:wx,y:wy,name:placeName(wx,wy)}; setEnd(picking,p); picking=null; cv.classList.remove('pick'); hideToast(); return; }
-  let best=null,bd=18*18;
-  for(const p of pois){ if(!poiVisible(p)) continue; const [x,y]=W2S(p.x,p.y); const d=(x-sx)**2+(y-sy)**2; if(d<bd){bd=d;best=p;} }
-  if(best) select(best, false); else { selected=null; renderSel(); draw(); }
-}
-function placeName(x,y){ const n=nearestNode(x,y); for(let k=0;k<adj[n].length;k+=4){ const r=roads[adj[n][k+3]]; if(r.name) return 'Gần '+r.name; } return 'Điểm trên bản đồ'; }
-
-/* ---------- UI: chips, list, selection ---------- */
+/* ---------- panel ---------- */
 const counts={}; pois.forEach(p=>counts[p.cat]=(counts[p.cat]||0)+1);
 const chipsEl=$('chips'); let onlyCat=null;
 Object.entries(CATS).forEach(([k,c])=>{ if(!counts[k]) return; const b=document.createElement('button'); b.className='chip'; b.dataset.k=k; b.setAttribute('aria-pressed','false');
-  b.innerHTML=`<i style="background:${c.color}"></i>${c.name} <span class="n">${counts[k]}</span>`;
-  b.onclick=()=>{ onlyCat = onlyCat===k?null:k; filter = new Set(onlyCat?[onlyCat]:Object.keys(CATS));
-    chipsEl.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed', x.dataset.k===onlyCat?'true':'false')); renderList(); draw(); };
+  b.innerHTML=`${svgIcon(k)}${c.name} <span class="n">${counts[k]}</span>`;
+  b.onclick=()=>{ onlyCat=onlyCat===k?null:k; filter=new Set(onlyCat?[onlyCat]:Object.keys(CATS));
+    chipsEl.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x.dataset.k===onlyCat?'true':'false')); renderList(); map.triggerRepaint(); };
   chipsEl.appendChild(b); });
 const streetNames=[...new Set(roads.filter(r=>r.name).map(r=>r.name))];
 const norm=s=>s.normalize('NFD').replace(/\p{M}/gu,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase();
-const poiKey=pois.map(p=>norm(p.name+' '+p.addr)); const streetKey=streetNames.map(norm);
+const poiKey=pois.map(p=>norm(p.name+' '+p.addr)), streetKey=streetNames.map(norm);
 const ORDER=['gov','transit','hotel','health','bank','fuel','shop','edu','sight'];
 function renderList(){
-  const q=norm($('q').value.trim()); const list=$('list'); list.innerHTML='';
-  let items=pois.filter((p,i)=>filter.has(p.cat) && (!q||poiKey[i].includes(q)));
-  items.sort((a,b)=>ORDER.indexOf(a.cat)-ORDER.indexOf(b.cat) || a.name.localeCompare(b.name,'vi'));
-  const streets = q? streetNames.filter((n,i)=>streetKey[i].includes(q)).slice(0,8):[];
+  const q=norm($('q').value.trim()), list=$('list'); list.innerHTML='';
+  const items=pois.filter((p,i)=>filter.has(p.cat)&&(!q||poiKey[i].includes(q))).sort((a,b)=>ORDER.indexOf(a.cat)-ORDER.indexOf(b.cat)||a.name.localeCompare(b.name,'vi'));
+  const streets=q?streetNames.filter((n,i)=>streetKey[i].includes(q)).slice(0,8):[];
   streets.forEach(n=>{ const b=document.createElement('button'); b.className='item';
-    b.innerHTML=`<div class="dot" style="background:var(--muted)">Đ</div><div><b></b><span>Tuyến đường</span></div>`; b.querySelector('b').textContent=n;
-    b.onclick=()=>showStreet(n); list.appendChild(b); });
+    b.innerHTML='<div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#5b6676" d="M9 2h2l-1 20H8zM13 2h2l1 20h-2zM11.4 5h1.2v3h-1.2zm0 5h1.2v3h-1.2zm0 5h1.2v3h-1.2z"/></svg></div><div><b></b><span>Tuyến đường</span></div>';
+    b.querySelector('b').textContent=n; b.onclick=()=>showStreet(n); list.appendChild(b); });
   items.slice(0,250).forEach(p=>{ const b=document.createElement('button'); b.className='item';
-    b.innerHTML=`<div class="dot" style="background:${CATS[p.cat].color}">${CATS[p.cat].ch}</div><div><b></b><span></span></div>`;
+    b.innerHTML=`<div class="ic">${svgIcon(p.cat)}</div><div><b></b><span></span></div>`;
     b.querySelector('b').textContent=p.name; b.querySelector('span').textContent=[CATS[p.cat].name,p.addr].filter(Boolean).join(' · ');
     b.onclick=()=>select(p,true); list.appendChild(b); });
-  if(!items.length && !streets.length){ list.innerHTML='<div class="empty">Không tìm thấy kết quả. Thử gõ không dấu, ví dụ “bien hoa” hoặc “khach san”.</div>'; }
+  if(!items.length&&!streets.length) list.innerHTML='<div class="empty">Không tìm thấy kết quả. Thử gõ không dấu, ví dụ “bien hoa” hoặc “khach san”.</div>';
 }
+function bboxOf(coords){ let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity; coords.forEach(([x,y])=>{x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}); return [[x0,y0],[x1,y1]]; }
+function fitPad(){ return isPhone()?{top:60,bottom:40,left:30,right:70}:{top:80,bottom:60,left:60,right:90}; }
 function showStreet(n){
-  const P=new Path2D(); let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
-  roads.filter(r=>r.name===n).forEach(r=>{ P.addPath(pathOf(r.p)); for(let i=0;i<r.p.length;i+=2){ x0=Math.min(x0,r.p[i]); x1=Math.max(x1,r.p[i]); y0=Math.min(y0,r.p[i+1]); y1=Math.max(y1,r.p[i+1]); } });
-  highlightRoad={name:n,path:P}; fit(x0,y0,x1,y1); toast(n);
+  const rs=roads.filter(r=>r.name===n); map.getSource('hl').setData(fc(rs.map(r=>line(r.ll))));
+  map.fitBounds(bboxOf(rs.flatMap(r=>r.ll)),{padding:fitPad(),maxZoom:17,pitch:map.getPitch(),bearing:map.getBearing()}); toast(n);
 }
-function fit(x0,y0,x1,y1){ view.cx=(x0+x1)/2; view.cy=(y0+y1)/2; view.s=Math.min(12, Math.min(W/Math.max(x1-x0,200), H/Math.max(y1-y0,200))*0.8); draw(); }
-function select(p, fly){
-  selected=p; highlightRoad=null; renderSel();
-  if(fly){ view.cx=p.x; view.cy=p.y; view.s=Math.max(view.s,0.6); }
-  draw(); if(isPhone()) panel.classList.remove('collapsed');
-}
-function gmaps(p){ return `https://www.google.com/maps/dir/?api=1&destination=${p.lat.toFixed(6)},${p.lon.toFixed(6)}`; }
+function select(p,fly){ selected=p; map.getSource('hl')?.setData(fc([])); renderSel();
+  if(fly) map.flyTo({center:[p.lon,p.lat],zoom:Math.max(map.getZoom(),16.5)}); map.triggerRepaint(); if(isPhone()) panel.classList.remove('collapsed'); }
+const gmaps=p=>`https://www.google.com/maps/dir/?api=1&destination=${p.lat.toFixed(6)},${p.lon.toFixed(6)}`;
 function renderSel(){
   const el=$('sel'); el.innerHTML=''; if(!selected) return; const p=selected;
   const c=document.createElement('div'); c.className='card';
-  c.innerHTML=`<h2></h2><div class="meta"></div><div class="row">
-    <button class="btn primary" data-a="to">Đến đây</button><button class="btn" data-a="from">Đi từ đây</button>
-    <a class="btn" target="_blank" rel="noopener">Dẫn đường bằng Google Maps ↗</a></div>`;
+  c.innerHTML=`<h2></h2><div class="meta"></div><div class="row"><button class="btn primary" data-a="to">Đến đây</button><button class="btn" data-a="from">Đi từ đây</button><a class="btn" target="_blank" rel="noopener">Dẫn đường bằng Google Maps ↗</a></div>`;
   c.querySelector('h2').textContent=p.name;
-  c.querySelector('.meta').textContent=[CATS[p.cat].name, p.addr, p.phone&&('ĐT: '+p.phone), p.hours&&('Giờ mở cửa: '+p.hours), `${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`].filter(Boolean).join(' · ');
+  c.querySelector('.meta').textContent=[CATS[p.cat].name,p.addr,p.phone&&('ĐT: '+p.phone),p.hours&&('Giờ mở cửa: '+p.hours),`${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`].filter(Boolean).join(' · ');
   c.querySelector('a').href=gmaps(p);
-  c.querySelector('[data-a=to]').onclick=()=>{ setEnd('b',{x:p.x,y:p.y,name:p.name}); openTab('route'); };
-  c.querySelector('[data-a=from]').onclick=()=>{ setEnd('a',{x:p.x,y:p.y,name:p.name}); openTab('route'); };
+  c.querySelector('[data-a=to]').onclick=()=>{ setEnd('b',{lon:p.lon,lat:p.lat,name:p.name}); openTab('route'); };
+  c.querySelector('[data-a=from]').onclick=()=>{ setEnd('a',{lon:p.lon,lat:p.lat,name:p.name}); openTab('route'); };
   el.appendChild(c);
 }
 
 /* ---------- routing UI ---------- */
-function setEnd(which,p){ if(which==='a') A=p; else B=p; renderRoute(); }
-function fmtKm(m){ return m<1000? Math.round(m/10)*10+' m' : (m/1000).toFixed(1).replace('.',',')+' km'; }
-function fmtMin(s){ const m=Math.max(1,Math.round(s/60)); return m<60? m+' phút' : Math.floor(m/60)+' giờ '+(m%60)+' phút'; }
+function setEnd(w,p){ if(w==='a') A=p; else B=p; renderRoute(); }
+const fmtKm=m=>m<1000?Math.round(m/10)*10+' m':(m/1000).toFixed(1).replace('.',',')+' km';
+const fmtMin=s=>{ const m=Math.max(1,Math.round(s/60)); return m<60?m+' phút':Math.floor(m/60)+' giờ '+(m%60)+' phút'; };
 function renderRoute(){
-  const va=$('v-a'), vb=$('v-b');
-  va.textContent=A?A.name:'Chọn điểm đi'; va.classList.toggle('ph',!A);
-  vb.textContent=B?B.name:'Chọn điểm đến'; vb.classList.toggle('ph',!B);
+  $('v-a').textContent=A?A.name:'Chọn điểm đi'; $('v-a').classList.toggle('ph',!A);
+  $('v-b').textContent=B?B.name:'Chọn điểm đến'; $('v-b').classList.toggle('ph',!B);
   $('f-a').classList.toggle('picking',picking==='a'); $('f-b').classList.toggle('picking',picking==='b');
-  const out=$('route-out'); out.innerHTML='';
-  route=null;
+  const out=$('route-out'); out.innerHTML=''; route=null; map.getSource('route')?.setData(fc([]));
   if(A&&B){
-    const r=dijkstra(nearestNode(A.x,A.y), nearestNode(B.x,B.y));
+    const r=dijkstra(nearestNode(A.lon,A.lat),nearestNode(B.lon,B.lat));
     if(!r){ out.innerHTML='<div class="empty">Không tìm được đường nối hai điểm này trong dữ liệu hiện có.</div>'; }
     else{
-      route=r;
+      route=r; const coords=r.nodes.map(n=>NLL[n]); map.getSource('route')?.setData(fc([line(coords)]));
       const sum=document.createElement('div'); sum.className='sum'; sum.innerHTML=`<strong>${fmtKm(r.len)}</strong><span>khoảng ${fmtMin(r.time)} đi ô tô / xe máy</span>`; out.appendChild(sum);
+      const row=document.createElement('div'); row.className='row';
+      const sim=document.createElement('button'); sim.className='btn primary'; sim.textContent='Xem trước tuyến 3D'; sim.onclick=()=>startDrive(); row.appendChild(sim);
+      const a=document.createElement('a'); a.className='btn'; a.target='_blank'; a.rel='noopener';
+      a.href=`https://www.google.com/maps/dir/?api=1&origin=${A.lat.toFixed(6)},${A.lon.toFixed(6)}&destination=${B.lat.toFixed(6)},${B.lon.toFixed(6)}`; a.textContent='Mở trong Google Maps ↗'; row.appendChild(a);
+      out.appendChild(row);
       const st=document.createElement('div'); st.className='steps';
       r.steps.filter(s=>s.len>15).forEach((s,i)=>{ const d=document.createElement('div'); d.className='step'; d.innerHTML='<span></span><em></em>'; d.firstChild.textContent=(i?'Tiếp theo ':'Đi theo ')+s.name; d.lastChild.textContent=fmtKm(s.len); st.appendChild(d); });
       out.appendChild(st);
-      const [lon,lat]=unproj(B.x,B.y), [lon0,lat0]=unproj(A.x,A.y);
-      const a=document.createElement('a'); a.className='btn'; a.target='_blank'; a.rel='noopener'; a.style.alignSelf='flex-start'; a.style.marginTop='6px';
-      a.href=`https://www.google.com/maps/dir/?api=1&origin=${lat0.toFixed(6)},${lon0.toFixed(6)}&destination=${lat.toFixed(6)},${lon.toFixed(6)}`; a.textContent='Mở tuyến này trong Google Maps ↗'; out.appendChild(a);
-      let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity; r.nodes.forEach(n=>{x0=Math.min(x0,NX[n]);x1=Math.max(x1,NX[n]);y0=Math.min(y0,NY[n]);y1=Math.max(y1,NY[n]);}); fit(x0,y0,x1,y1);
+      map.fitBounds(bboxOf(coords),{padding:fitPad(),maxZoom:17,pitch:map.getPitch(),bearing:map.getBearing()});
     }
-  } else out.innerHTML='<div class="empty">Chọn một địa điểm trong danh sách rồi bấm “Đến đây” / “Đi từ đây”, hoặc bấm “Chọn trên bản đồ” rồi chạm vào vị trí cần đến.</div>';
-  draw();
+  } else out.innerHTML='<div class="empty">Chọn một địa điểm rồi bấm “Đến đây” / “Đi từ đây”, hoặc bấm “Chọn trên bản đồ” rồi chạm vào vị trí cần đến.</div>';
+  map.triggerRepaint();
 }
-$('pick-a').onclick=()=>{ picking='a'; cv.classList.add('pick'); toast('Chạm vào bản đồ để chọn điểm đi'); renderRoute(); if(isPhone()) panel.classList.add('collapsed'); };
-$('pick-b').onclick=()=>{ picking='b'; cv.classList.add('pick'); toast('Chạm vào bản đồ để chọn điểm đến'); renderRoute(); if(isPhone()) panel.classList.add('collapsed'); };
+$('pick-a').onclick=()=>{ picking='a'; $('wrap').classList.add('picking-on'); toast('Chạm vào bản đồ để chọn điểm đi'); renderRoute(); if(isPhone()) panel.classList.add('collapsed'); };
+$('pick-b').onclick=()=>{ picking='b'; $('wrap').classList.add('picking-on'); toast('Chạm vào bản đồ để chọn điểm đến'); renderRoute(); if(isPhone()) panel.classList.add('collapsed'); };
 $('swap').onclick=()=>{ [A,B]=[B,A]; renderRoute(); };
-$('clear').onclick=()=>{ A=B=null; route=null; renderRoute(); };
+$('clear').onclick=()=>{ A=B=null; stopDrive(); renderRoute(); };
+
+/* ---------- 3D route preview (simulated drive) ---------- */
+let drive=null;
+function startDrive(){
+  if(!route) return; stopDrive();
+  const pts=route.nodes.map(n=>({ll:NLL[n],x:NX[n],y:NY[n]})); const cum=[0];
+  for(let i=1;i<pts.length;i++) cum.push(cum[i-1]+Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y));
+  drive={pts,cum,total:cum[cum.length-1],d:0,last:performance.now(),bearing:map.getBearing()};
+  $('nav').hidden=false; if(isPhone()) panel.classList.add('collapsed');
+  requestAnimationFrame(stepDrive);
+}
+function stepDrive(t){
+  if(!drive) return; const dt=Math.min(.05,(t-drive.last)/1000); drive.last=t;
+  const speed=Math.max(60, drive.total/40);                      // whole route in ≈40 s
+  drive.d=Math.min(drive.total, drive.d+speed*dt);
+  const {pts,cum}=drive; let i=1; while(i<cum.length-1&&cum[i]<drive.d) i++;
+  const f=(drive.d-cum[i-1])/Math.max(1e-6,cum[i]-cum[i-1]); const a=pts[i-1], b=pts[i];
+  const lon=a.ll[0]+(b.ll[0]-a.ll[0])*f, lat=a.ll[1]+(b.ll[1]-a.ll[1])*f;
+  let target=Math.atan2(b.x-a.x,-(b.y-a.y))*180/Math.PI; let diff=((target-drive.bearing+540)%360)-180; drive.bearing+=diff*Math.min(1,dt*3);
+  car=[lon,lat];
+  map.jumpTo({center:[lon,lat],bearing:drive.bearing,pitch:62,zoom:17.6});
+  const rem=drive.total-drive.d; $('nav-road').textContent=route.segRoad[Math.min(i-1,route.segRoad.length-1)];
+  $('nav-dist').textContent='Còn '+fmtKm(rem); $('nav-eta').textContent=fmtKm(drive.total)+' · '+fmtMin(route.time*rem/drive.total)+' còn lại';
+  if(drive.d>=drive.total){ toast('Đã đến '+(B?B.name:'nơi')); drive=null; return; }
+  requestAnimationFrame(stepDrive);
+}
+function stopDrive(){ drive=null; car=null; $('nav').hidden=true; map.triggerRepaint(); }
+$('nav-stop').onclick=stopDrive;
+
 function openTab(t){
   $('tab-find').setAttribute('aria-selected',t==='find'); $('tab-route').setAttribute('aria-selected',t==='route');
-  $('view-find').hidden = t!=='find'; $('view-route').hidden = t!=='route';
-  $('view-find').style.display = t==='find'?'flex':'none'; $('view-route').style.display = t==='route'?'flex':'none';
+  $('view-find').style.display=t==='find'?'flex':'none'; $('view-route').style.display=t==='route'?'flex':'none';
   if(t==='route') renderRoute();
 }
 $('tab-find').onclick=()=>openTab('find'); $('tab-route').onclick=()=>openTab('route');
 $('q').addEventListener('input',()=>{ openTab('find'); renderList(); });
-
 let tt; function toast(m){ const t=$('toast'); t.textContent=m; t.hidden=false; clearTimeout(tt); if(!picking) tt=setTimeout(hideToast,2500); }
 function hideToast(){ $('toast').hidden=true; }
 const panel=$('panel'); const isPhone=()=>matchMedia('(max-width:760px)').matches;
-$('grab').onclick=()=>{ panel.classList.toggle('collapsed'); requestAnimationFrame(resize); };
-new ResizeObserver(()=>resize()).observe(wrap);
-
-/* ---------- theme + fonts ---------- */
-readTheme();
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{readTheme();draw();});
-new MutationObserver(()=>{readTheme();draw();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-document.fonts && document.fonts.ready.then(draw);
-
-$('loading').remove();
-resize(); home(); renderList();
+$('grab').onclick=()=>panel.classList.toggle('collapsed');
+renderList();
 })();
 </script>

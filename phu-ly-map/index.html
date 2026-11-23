@@ -259,7 +259,7 @@ map.on('load', () => {
   map.addLayer({id:'route-glow',type:'line',source:'route',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#2bc59a','line-opacity':.25,'line-width':['interpolate',['linear'],['zoom'],12,10,18,34],'line-blur':4}});
   map.addLayer({id:'route',type:'line',source:'route',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#22d3a0','line-width':['interpolate',['linear'],['zoom'],12,4,18,14]}});
   map.addLayer({id:'bld',type:'fill-extrusion',source:'bld',minzoom:13.5,paint:{
-    'fill-extrusion-color':['interpolate',['linear'],['get','h'],3,'#2a3346',12,'#34405a',30,'#45526f'],
+    'fill-extrusion-color':['interpolate',['linear'],['get','h'],3,'#4a5674',12,'#5a6888',30,'#7083a8'],
     'fill-extrusion-height':['get','h'],'fill-extrusion-base':0,
     'fill-extrusion-opacity':['interpolate',['linear'],['zoom'],13.5,0,14.5,.92]}});
   map.setLight({anchor:'viewport',color:'#ffffff',intensity:.35,position:[1.2,210,40]});
